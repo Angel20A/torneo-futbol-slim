@@ -1,0 +1,16 @@
+# Dependencias de PHP
+/vendor/
+
+# Archivos de entorno y credenciales
+.env
+
+# Archivos subidos por los usuarios (fotos de jugadores/equipos)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Archivos de configuración de IDEs y SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,208 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}Inicio | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Hero Banner -->
+    <div class="col-12">
+        <div class="p-5 rounded-4 bg-white border shadow-sm">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-6 fw-bold text-dark mb-3">Gestión de Torneo Infantil de Fútbol</h1>
+                    <p class="lead text-muted mb-3">
+                        Sistema para la gestión de clubes, jugadores, partidos, goles, tarjetas e incidencias. El objetivo es facilitar el control del torneo.
+                    </p>
+                    <p class="lead text-muted mb-4">
+                        Seleccione una opción de los siguientes módulos para comenzar.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="#modulos" class="btn btn-success px-4 py-2 fw-medium rounded-3">
+                            <i class="bi bi-grid-fill me-1"></i> Explorar Módulos
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center mt-4 mt-lg-0">
+                    <div class="p-4 bg-light rounded-4 border">
+                        <i class="bi bi-trophy display-1 text-warning mb-2"></i>
+                        <h5 class="fw-bold mb-1">Liga Menor 2026</h5>
+                        <p class="small text-muted mb-0">Plataforma Oficial de Gestión</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estado de la Infraestructura -->
+<!--<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 bg-primary-subtle text-primary fs-3">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1 small text-uppercase fw-semibold">Intérprete</h6>
+                    <h5 class="card-title mb-0 fw-bold">PHP {{ php_version }}</h5>
+                    <span class="text-success small fw-medium"><i class="bi bi-check-circle-fill"></i> Tipado estricto habilitado</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 {% if db_connected %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} fs-3">
+                    <i class="bi bi-database-check"></i>
+                </div>
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1 small text-uppercase fw-semibold">Base de Datos (MariaDB)</h6>
+                    <h5 class="card-title mb-0 fw-bold">
+                        {% if db_connected %}
+                            Conectado (PDO)
+                        {% else %}
+                            Pendiente / Sin Conexión
+                        {% endif %}
+                    </h5>
+                    <span class="small {% if db_connected %}text-success{% else %}text-muted{% endif %}">
+                        {% if db_connected %}
+                            <i class="bi bi-check-circle-fill"></i> Versión: {{ db_version|slice(0, 15) }}
+                        {% else %}
+                            <i class="bi bi-info-circle"></i> Configurar en <code>.env</code>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 bg-warning-subtle text-warning-emphasis fs-3">
+                    <i class="bi bi-filetype-html"></i>
+                </div>
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1 small text-uppercase fw-semibold">Motor de Vistas</h6>
+                    <h5 class="card-title mb-0 fw-bold">Twig Template Engine</h5>
+                    <span class="text-success small fw-medium"><i class="bi bi-check-circle-fill"></i> Renderizado con éxito</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>-->
+
+<!-- Módulos del Sistema (Próximas Fases) -->
+<div id="modulos" class="row g-3">
+    <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h4 class="fw-bold mb-0">Módulos del Torneo</h4>
+            <!--<span class="text-muted small">Estructura preparada en <code>config/routes.php</code></span>-->
+        </div>
+    </div>
+
+    <!-- Tarjeta Equipos -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="p-2 rounded-3 bg-success-subtle text-success fs-4">
+                        <i class="bi bi-shield-shaded"></i>
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 1</span>
+                </div>
+                <h5 class="fw-bold mb-2">Equipos</h5>
+                <p class="text-muted small mb-3">Registro de clubes, categorías infantiles, logos y delegados oficiales.</p>
+                <a href="/equipos" class="btn btn-sm btn-outline-success rounded-pill px-3">Ir a Equipos</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta Jugadores -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="p-2 rounded-3 bg-primary-subtle text-primary fs-4">
+                        <i class="bi bi-people-fill"></i>
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 2</span>
+                </div>
+                <h5 class="fw-bold mb-2">Jugadores</h5>
+                <p class="text-muted small mb-3">Fichas de niños/niñas, dorsales, edades, posiciones y fotografías.</p>
+                <a href="/jugadores" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ir a Jugadores</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta Partidos -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="p-2 rounded-3 bg-info-subtle text-info fs-4">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 3</span>
+                </div>
+                <h5 class="fw-bold mb-2">Partidos &amp; Fixture</h5>
+                <p class="text-muted small mb-3">Programación de jornadas, campos de juego, horarios y resultados finales.</p>
+                <a href="/partidos" class="btn btn-sm btn-outline-info rounded-pill px-3">Ir a Partidos</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta Goles -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis fs-4">
+                        <i class="bi bi-dribbble"></i>
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 4</span>
+                </div>
+                <h5 class="fw-bold mb-2">Goles &amp; Anotaciones</h5>
+                <p class="text-muted small mb-3">Minuto a minuto de anotaciones, tabla de goleadores y premios.</p>
+                <a href="/goles" class="btn btn-sm btn-outline-warning rounded-pill px-3">Ir a Goles</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta Incidencias -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="p-2 rounded-3 bg-danger-subtle text-danger fs-4">
+                        <i class="bi bi-exclamation-octagon-fill"></i>
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 5</span>
+                </div>
+                <h5 class="fw-bold mb-2">Incidencias &amp; Fair Play</h5>
+                <p class="text-muted small mb-3">Tarjetas amarillas, rojas, faltas disciplinarias y sanciones de árbitros.</p>
+                <a href="/incidencias" class="btn btn-sm btn-outline-danger rounded-pill px-3">Ir a Incidencias</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta Reportes -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="p-2 rounded-3 bg-dark-subtle text-dark fs-4">
+                        <i class="bi bi-trophy"></i>
+                    </span>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 6</span>
+                </div>
+                <h5 class="fw-bold mb-2">Reportes &amp; Posiciones</h5>
+                <p class="text-muted small mb-3">Tabla general (PTS, PJ, PG, PE, PP, GF, GC, DIF) y reportes en PDF/Excel.</p>
+                <a href="/reportes" class="btn btn-sm btn-outline-dark rounded-pill px-3">Ir a Reportes</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
