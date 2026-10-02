@@ -22,13 +22,6 @@
             flex-direction: column;
             background-color: #f8f9fa;
         }
-        .navbar-brand-badge {
-            background: linear-gradient(135deg, #198754, #0f5132);
-            color: #fff;
-            padding: 4px 10px;
-            border-radius: 8px;
-            font-weight: 700;
-        }
         .main-content {
             flex: 1 0 auto;
         }
@@ -43,6 +36,27 @@
         }
         .nav-link:hover {
             color: var(--soccer-accent) !important;
+        }
+        .avatar-img {
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .team-logo-sm {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+        .team-logo-md {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+        }
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
         }
     </style>
     {% block styles %}{% endblock %}
@@ -69,12 +83,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/equipos">
+                        <a class="nav-link" href="{{ url_for('equipos.index') }}">
                             <i class="bi bi-shield-shaded me-1"></i> Equipos
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/jugadores">
+                        <a class="nav-link" href="{{ url_for('jugadores.index') }}">
                             <i class="bi bi-people-fill me-1"></i> Jugadores
                         </a>
                     </li>
@@ -99,6 +113,12 @@
                         </a>
                     </li>
                 </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill">
+                        <i class="bi bi-circle-fill fs-6 text-success me-1"></i> Liga Infantil 2026
+                    </span>
+                </div>
             </div>
         </div>
     </nav>
@@ -106,6 +126,32 @@
     <!-- Contenido Dinámico -->
     <main class="main-content py-4">
         <div class="container">
+            {# Mensajes Flash globales #}
+            {% set flashMessages = flash ? flash.getMessages() : {} %}
+            {% if flashMessages is not empty %}
+                <div class="row">
+                    <div class="col-12">
+                        {% for type, messages in flashMessages %}
+                            {% for msg in messages %}
+                                <div class="alert alert-{{ type }} alert-dismissible fade show shadow-sm rounded-3 mb-3 d-flex align-items-center" role="alert">
+                                    {% if type == 'success' %}
+                                        <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                                    {% elseif type == 'danger' %}
+                                        <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                                    {% elseif type == 'warning' %}
+                                        <i class="bi bi-exclamation-circle-fill fs-5 me-2"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle-fill fs-5 me-2"></i>
+                                    {% endif %}
+                                    <div class="flex-grow-1">{{ msg }}</div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
             {% block content %}{% endblock %}
         </div>
     </main>

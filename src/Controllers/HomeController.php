@@ -20,15 +20,19 @@ final class HomeController
 
     public function index(Request $request, Response $response): Response
     {
-        // Prueba de conexión básica con MariaDB para verificar fontanería
         $dbConnected = false;
         $dbVersion = null;
+        $totalEquipos = 0;
+        $totalJugadores = 0;
 
         try {
             /** @var string $version */
             $version = $this->db->query('SELECT VERSION()')->fetchColumn();
             $dbConnected = true;
             $dbVersion = $version;
+
+            $totalEquipos = (int) $this->db->query('SELECT COUNT(*) FROM equipo')->fetchColumn();
+            $totalJugadores = (int) $this->db->query('SELECT COUNT(*) FROM jugador')->fetchColumn();
         } catch (Throwable) {
             $dbConnected = false;
         }
@@ -38,6 +42,8 @@ final class HomeController
             'db_connected' => $dbConnected,
             'db_version' => $dbVersion,
             'php_version' => PHP_VERSION,
+            'total_equipos' => $totalEquipos,
+            'total_jugadores' => $totalJugadores,
         ]);
     }
 }
