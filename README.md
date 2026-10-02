@@ -153,3 +153,11 @@ templates/home.twig (Hereda de layouts/base.twig)
 - [ ] **Goles:** Minuto a minuto y tabla de goleo individual.
 - [ ] **Incidencias:** Tarjetas amarillas, rojas y control de Fair Play.
 - [ ] **Reportes:** Tabla general de posiciones (PTS, PJ, PG, PE, PP, GF, GC, DIF) y reportes imprimibles.
+
+---
+
+## 🤖 Directrices para Colaboradores y Asistentes de IA
+
+Si vas a utilizar asistentes de Inteligencia Artificial (ChatGPT, Claude, Gemini, Copilot, etc.) para programar nuevos módulos, consulta y copia el prompt maestro de:
+👉 **[DIRECTRICES_ARQUITECTURA_IA.md](DIRECTRICES_ARQUITECTURA_IA.md)**
+

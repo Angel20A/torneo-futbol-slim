@@ -62,7 +62,7 @@ final class JugadorController
     }
 
     /**
-     * Procesa y guarda un nuevo jugador
+     * Procesa y guarda un nuevo jugador con manejo transaccional y rollback de archivos físicos.
      */
     public function store(Request $request, Response $response): Response
     {
@@ -77,7 +77,7 @@ final class JugadorController
 
         $errors = $this->validate($idEquipo, $nombres, $apellidos, $fechaNacimiento);
 
-        // La base de datos define foto_url como NOT NULL en la creación
+        // La fotografía es obligatoria al crear un nuevo jugador
         if ($fotoFile === null || $fotoFile->getError() === UPLOAD_ERR_NO_FILE) {
             $errors[] = 'La fotografía del jugador es obligatoria.';
         }
@@ -96,14 +96,23 @@ final class JugadorController
             ]);
         }
 
+        $fotoUrl = null;
+
         try {
+            // 1. Subida segura con validación de tipo MIME real y generación de hash único
             $fotoUrl = $this->uploader->upload($fotoFile, 'jugadores');
 
+            // 2. Persistencia en base de datos vía PDO
             $this->jugadores->create($idEquipo, $nombres, $apellidos, $fechaNacimiento, (string) $fotoUrl);
             $this->flash->success("El jugador {$nombres} {$apellidos} fue registrado con éxito.");
 
             return $response->withHeader('Location', '/jugadores')->withStatus(302);
         } catch (Throwable $e) {
+            // 3. ROLLBACK EN DISCO: si falla la inserción en BD, eliminamos la foto física subida
+            if ($fotoUrl !== null) {
+                $this->uploader->delete($fotoUrl);
+            }
+
             $errors[] = 'Error al registrar el jugador: ' . $e->getMessage();
 
             return $this->view->render($response, 'jugadores/form.twig', [
@@ -142,7 +151,7 @@ final class JugadorController
     }
 
     /**
-     * Actualiza los datos de un jugador
+     * Actualiza los datos de un jugador con sustitución segura de imagen y rollback si la BD falla.
      */
     public function update(Request $request, Response $response, array $args): Response
     {
@@ -161,6 +170,7 @@ final class JugadorController
         $nombres = trim((string) ($data['nombres'] ?? ''));
         $apellidos = trim((string) ($data['apellidos'] ?? ''));
         $fechaNacimiento = trim((string) ($data['fecha_nacimiento'] ?? ''));
+        $fotoFile = $files['foto'] ?? null;
 
         $errors = $this->validate($idEquipo, $nombres, $apellidos, $fechaNacimiento);
 
@@ -178,23 +188,42 @@ final class JugadorController
             ]);
         }
 
-        try {
-            $fotoUrl = $this->uploader->upload($files['foto'] ?? null, 'jugadores', $jugador['foto_url']);
+        $nuevaFotoUrl = null;
 
+        try {
+            // 1. Si el usuario proporcionó una nueva fotografía, se sube
+            if ($fotoFile !== null && $fotoFile->getError() !== UPLOAD_ERR_NO_FILE) {
+                $nuevaFotoUrl = $this->uploader->upload($fotoFile, 'jugadores');
+            }
+
+            // 2. Si no subió foto nueva, conservamos la actual
+            $fotoFinal = $nuevaFotoUrl ?? $jugador['foto_url'];
+
+            // 3. Actualizamos en base de datos mediante PDO
             $this->jugadores->update(
                 $id,
                 $idEquipo,
                 $nombres,
                 $apellidos,
                 $fechaNacimiento,
-                $fotoUrl ?? $jugador['foto_url']
+                $fotoFinal
             );
+
+            // 4. Si la BD se actualizó con éxito y se subió foto nueva, eliminamos la foto anterior del disco
+            if ($nuevaFotoUrl !== null && !empty($jugador['foto_url'])) {
+                $this->uploader->delete($jugador['foto_url']);
+            }
 
             $this->flash->success("Datos del jugador {$nombres} {$apellidos} actualizados correctamente.");
 
             return $response->withHeader('Location', '/jugadores')->withStatus(302);
         } catch (Throwable $e) {
-            $errors[] = 'Error al actualizar: ' . $e->getMessage();
+            // 5. ROLLBACK EN DISCO: Si falló la actualización en BD, eliminamos la nueva foto que quedó huérfana
+            if ($nuevaFotoUrl !== null) {
+                $this->uploader->delete($nuevaFotoUrl);
+            }
+
+            $errors[] = 'Error al actualizar el jugador: ' . $e->getMessage();
 
             return $this->view->render($response, 'jugadores/form.twig', [
                 'title' => "Editar Jugador: {$jugador['nombres']} {$jugador['apellidos']}",
@@ -211,7 +240,7 @@ final class JugadorController
     }
 
     /**
-     * Elimina un jugador
+     * Elimina un jugador y remueve su archivo físico de imagen del disco
      */
     public function delete(Request $request, Response $response, array $args): Response
     {
@@ -225,7 +254,7 @@ final class JugadorController
 
         try {
             if (!empty($jugador['foto_url'])) {
-                $this->uploader->deleteFile($jugador['foto_url']);
+                $this->uploader->delete($jugador['foto_url']);
             }
 
             $this->jugadores->delete($id);
