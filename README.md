@@ -147,8 +147,8 @@ templates/home.twig (Hereda de layouts/base.twig)
 
 ## 📋 Módulos Planificados (Próximas Fases)
 
-- [ ] **Equipos:** Registro de clubes, categorías, escudos y delegados.
-- [ ] **Jugadores:** Padrón infantil con fotos, dorsales, categorías y fichas médicas.
+- [x] **Equipos:** Registro de clubes, categorías, escudos y delegados (CRUD completado).
+- [x] **Jugadores:** Padrón infantil con fotos, asignación de club, cálculo de edad y filtros (CRUD completado).
 - [ ] **Partidos / Fixture:** Rol de juegos, asignación de canchas, árbitros y horarios.
 - [ ] **Goles:** Minuto a minuto y tabla de goleo individual.
 - [ ] **Incidencias:** Tarjetas amarillas, rojas y control de Fair Play.
