@@ -105,34 +105,42 @@
 
     <!-- Tarjeta Equipos -->
     <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2 card-hover">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
-                    <span class="p-2 rounded-3 bg-success-subtle text-success fs-4">
+                    <span class="p-2.5 rounded-3 bg-success-subtle text-success fs-4">
                         <i class="bi bi-shield-shaded"></i>
                     </span>
-                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 1</span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                        {{ total_equipos }} {{ total_equipos == 1 ? 'Club' : 'Clubes' }}
+                    </span>
                 </div>
                 <h5 class="fw-bold mb-2">Equipos</h5>
-                <p class="text-muted small mb-3">Registro de clubes, categorías infantiles, logos y delegados oficiales.</p>
-                <a href="/equipos" class="btn btn-sm btn-outline-success rounded-pill px-3">Ir a Equipos</a>
+                <p class="text-muted small mb-3">Registro de clubes participantes, escudos y categorías infantiles.</p>
+                <a href="{{ url_for('equipos.index') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                    <i class="bi bi-arrow-right-short"></i> Gestionar Equipos
+                </a>
             </div>
         </div>
     </div>
 
     <!-- Tarjeta Jugadores -->
     <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 p-2">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-2 card-hover">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-3">
-                    <span class="p-2 rounded-3 bg-primary-subtle text-primary fs-4">
+                    <span class="p-2.5 rounded-3 bg-primary-subtle text-primary fs-4">
                         <i class="bi bi-people-fill"></i>
                     </span>
-                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Módulo 2</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">
+                        {{ total_jugadores }} {{ total_jugadores == 1 ? 'Jugador' : 'Jugadores' }}
+                    </span>
                 </div>
                 <h5 class="fw-bold mb-2">Jugadores</h5>
-                <p class="text-muted small mb-3">Fichas de niños/niñas, dorsales, edades, posiciones y fotografías.</p>
-                <a href="/jugadores" class="btn btn-sm btn-outline-primary rounded-pill px-3">Ir a Jugadores</a>
+                <p class="text-muted small mb-3">Fichas de niños/niñas, asignación de clubes, edades y fotografías.</p>
+                <a href="{{ url_for('jugadores.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                    <i class="bi bi-arrow-right-short"></i> Gestionar Jugadores
+                </a>
             </div>
         </div>
     </div>

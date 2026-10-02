@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Controllers\EquipoController;
 use App\Controllers\HomeController;
+use App\Controllers\JugadorController;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 
@@ -11,36 +13,45 @@ return function (App $app): void {
     $app->get('/', [HomeController::class, 'index'])->setName('home');
 
     // ==========================================
-    // Estructura base para módulos futuros
+    // Módulo de Equipos (CRUD)
     // ==========================================
-
-    // Módulo de Equipos
     $app->group('/equipos', function (RouteCollectorProxy $group): void {
-        // Rutas futuras: index, create, store, show, edit, update, delete
+        $group->get('', [EquipoController::class, 'index'])->setName('equipos.index');
+        $group->get('/crear', [EquipoController::class, 'create'])->setName('equipos.create');
+        $group->post('', [EquipoController::class, 'store'])->setName('equipos.store');
+        $group->get('/{id:[0-9]+}/editar', [EquipoController::class, 'edit'])->setName('equipos.edit');
+        $group->post('/{id:[0-9]+}/editar', [EquipoController::class, 'update'])->setName('equipos.update');
+        $group->post('/{id:[0-9]+}/eliminar', [EquipoController::class, 'delete'])->setName('equipos.delete');
     });
 
-    // Módulo de Jugadores
+    // ==========================================
+    // Módulo de Jugadores (CRUD)
+    // ==========================================
     $app->group('/jugadores', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para gestión de plantilla infantil
+        $group->get('', [JugadorController::class, 'index'])->setName('jugadores.index');
+        $group->get('/crear', [JugadorController::class, 'create'])->setName('jugadores.create');
+        $group->post('', [JugadorController::class, 'store'])->setName('jugadores.store');
+        $group->get('/{id:[0-9]+}/editar', [JugadorController::class, 'edit'])->setName('jugadores.edit');
+        $group->post('/{id:[0-9]+}/editar', [JugadorController::class, 'update'])->setName('jugadores.update');
+        $group->post('/{id:[0-9]+}/eliminar', [JugadorController::class, 'delete'])->setName('jugadores.delete');
     });
 
-    // Módulo de Partidos / Calendario
+    // ==========================================
+    // Módulos Futuros
+    // ==========================================
     $app->group('/partidos', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para fixture, programación y resultados
+        // Rutas futuras para fixture y programación
     });
 
-    // Módulo de Goles / Anotaciones
     $app->group('/goles', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para registro de goleadores
+        // Rutas futuras para anotaciones
     });
 
-    // Módulo de Incidencias / Tarjetas / Faltas
     $app->group('/incidencias', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para registro disciplinario
+        // Rutas futuras para tarjetas y suspensiones
     });
 
-    // Módulo de Reportes / Tabla de Posiciones / Estadísticas
     $app->group('/reportes', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para reportes y tablas del torneo
+        // Rutas futuras para tablas y estadísticas
     });
 };
