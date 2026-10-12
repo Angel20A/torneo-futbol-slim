@@ -106,6 +106,18 @@
     <!-- Contenido Dinámico -->
     <main class="main-content py-4">
         <div class="container">
+            {# Mensajes de resultado compartidos por todos los módulos #}
+            {% set flashMessages = flash ? flash.getMessages() : {} %}
+            {% if flashMessages is not empty %}
+                {% for type, messages in flashMessages %}
+                    {% for msg in messages %}
+                        <div class="alert alert-{{ type }} alert-dismissible fade show shadow-sm rounded-3 mb-3" role="alert">
+                            {{ msg }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
             {% block content %}{% endblock %}
         </div>
     </main>

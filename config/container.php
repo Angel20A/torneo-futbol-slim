@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use DI\ContainerBuilder;
+use App\Repositories\IncidenciaRepository;
+use App\Support\Flash;
+use App\Support\IncidenciaCsrf;
+use App\Validation\IncidenciaValidator;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 
@@ -34,6 +38,23 @@ $containerBuilder->addDefinitions([
         );
     },
 
+    // Componentes compartidos y dependencias del módulo de Incidencias
+    Flash::class => function (): Flash {
+        return new Flash();
+    },
+
+    IncidenciaCsrf::class => function (): IncidenciaCsrf {
+        return new IncidenciaCsrf();
+    },
+
+    IncidenciaRepository::class => function (ContainerInterface $c): IncidenciaRepository {
+        return new IncidenciaRepository($c->get(PDO::class));
+    },
+
+    IncidenciaValidator::class => function (): IncidenciaValidator {
+        return new IncidenciaValidator();
+    },
+
     // Motor de plantillas Twig
     Twig::class => function (ContainerInterface $c): Twig {
         $twigConfig = $c->get('settings')['twig'];
@@ -45,6 +66,7 @@ $containerBuilder->addDefinitions([
         $environment = $twig->getEnvironment();
         $environment->addGlobal('appName', $appConfig['name']);
         $environment->addGlobal('appEnv', $appConfig['env']);
+        $environment->addGlobal('flash', $c->get(Flash::class));
 
         return $twig;
     },
