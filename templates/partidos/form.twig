@@ -1,0 +1,262 @@
+{% extends 'layouts/base.twig' %}
+
+{% set isEdit = partido.id_partido is defined and partido.id_partido %}
+{% block title %}{{ title }} | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('partidos.index') }}" class="text-decoration-none text-muted">Partidos</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ isEdit ? 'Editar' : 'Programar' }}</li>
+            </ol>
+        </nav>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="p-2.5 rounded-3 bg-info-subtle text-info fs-4">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </span>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">{{ isEdit ? 'Editar Partido' : 'Programar Nuevo Partido' }}</h4>
+                        <small class="text-muted">{{ isEdit ? 'Modifique la jornada o los equipos del encuentro' : 'Elija la jornada y los dos equipos que se enfrentarán' }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                {% if errors is not empty %}
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                            <strong>Por favor corrija los siguientes errores:</strong>
+                        </div>
+                        <ul class="mb-0 ps-4 small">
+                            {% for err in errors %}
+                                <li>{{ err }}</li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+
+                {% if jornadas is empty %}
+                    <div class="alert alert-warning rounded-3 mb-4">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        No hay jornadas habilitadas. Debe existir al menos una jornada para poder programar partidos.
+                        <div class="mt-2">
+                            <a href="{{ url_for('jornadas.create') }}" class="btn btn-sm btn-warning">Crear Jornada</a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if equipos|length < 2 %}
+                    <div class="alert alert-warning rounded-3 mb-4">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        Se necesitan al menos 2 equipos registrados para programar un partido.
+                        <div class="mt-2">
+                            <a href="{{ url_for('equipos.create') }}" class="btn btn-sm btn-warning">Crear Equipo</a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if equipos_bloqueados %}
+                    <div class="alert alert-info rounded-3 mb-4 small">
+                        <i class="bi bi-lock-fill me-2"></i>
+                        Los equipos están bloqueados porque este partido ya tiene goles o incidencias registrados. Solo puede cambiar la jornada.
+                    </div>
+                {% endif %}
+
+                <form action="{{ isEdit ? url_for('partidos.update', {'id': partido.id_partido}) : url_for('partidos.store') }}" method="POST" novalidate>
+                    <!-- Jornada -->
+                    <div class="mb-3">
+                        <label for="id_jornada" class="form-label fw-semibold text-secondary">
+                            Jornada <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-lg rounded-3 fs-6" id="id_jornada" name="id_jornada" required>
+                            <option value="">-- Seleccionar Jornada --</option>
+                            {% for j in jornadas %}
+                                <option value="{{ j.id_jornada }}"
+                                        data-fecha="{{ j.fecha_juego|date('d/m/Y') }}"
+                                        {% if partido.id_jornada|default(0) == j.id_jornada %}selected{% endif %}>
+                                    Jornada {{ j.numero_jornada }} · {{ j.fecha_juego|date('d/m/Y') }}{% if j.descripcion %} · {{ j.descripcion }}{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <i class="bi bi-calendar3 me-1"></i>Fecha del partido:
+                            <strong id="fechaJornada" class="text-dark">Seleccione una jornada</strong>
+                            (se toma automáticamente de la jornada).
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <!-- Equipo Local -->
+                        <div class="col-md-6">
+                            <label for="id_equipo_local" class="form-label fw-semibold text-secondary">
+                                Equipo Local <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select rounded-3" id="id_equipo_local" name="id_equipo_local" required {% if equipos_bloqueados %}disabled{% endif %}>
+                                <option value="">-- Seleccionar Local --</option>
+                                {% for eq in equipos %}
+                                    <option value="{{ eq.id_equipo }}" data-logo="{{ eq.foto_url }}"
+                                            {% if partido.id_equipo_local|default(0) == eq.id_equipo %}selected{% endif %}>
+                                        {{ eq.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if equipos_bloqueados %}
+                                <input type="hidden" name="id_equipo_local" value="{{ partido.id_equipo_local }}">
+                            {% endif %}
+                        </div>
+
+                        <!-- Equipo Visitante -->
+                        <div class="col-md-6">
+                            <label for="id_equipo_visita" class="form-label fw-semibold text-secondary">
+                                Equipo Visitante <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select rounded-3" id="id_equipo_visita" name="id_equipo_visita" required {% if equipos_bloqueados %}disabled{% endif %}>
+                                <option value="">-- Seleccionar Visitante --</option>
+                                {% for eq in equipos %}
+                                    <option value="{{ eq.id_equipo }}" data-logo="{{ eq.foto_url }}"
+                                            {% if partido.id_equipo_visita|default(0) == eq.id_equipo %}selected{% endif %}>
+                                        {{ eq.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if equipos_bloqueados %}
+                                <input type="hidden" name="id_equipo_visita" value="{{ partido.id_equipo_visita }}">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-text mb-3">
+                        <i class="bi bi-info-circle me-1"></i>Los equipos que ya juegan en la jornada elegida aparecen deshabilitados: un equipo solo puede jugar una vez por jornada.
+                    </div>
+
+                    <!-- Vista previa del encuentro -->
+                    <div class="mb-4 p-3 bg-light rounded-3 border">
+                        <div class="small text-muted mb-2 fw-medium text-center">Vista previa del encuentro:</div>
+                        <div id="matchPreview" class="d-flex align-items-center justify-content-center gap-3 flex-wrap"></div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a href="{{ url_for('partidos.index') }}" class="btn btn-light rounded-3 px-4 fw-medium">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-info text-white rounded-3 px-4 fw-medium shadow-sm" {% if equipos|length < 2 or jornadas is empty %}disabled{% endif %}>
+                            <i class="bi bi-check2-circle me-1"></i> {{ isEdit ? 'Actualizar Partido' : 'Guardar Partido' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    // Mapa [id_jornada => ids de equipos que ya juegan en ella] (excluye el partido que se edita)
+    const ocupados = {{ ocupados|json_encode|raw }};
+
+    const jornada = document.getElementById('id_jornada');
+    const local = document.getElementById('id_equipo_local');
+    const visita = document.getElementById('id_equipo_visita');
+    const fechaBox = document.getElementById('fechaJornada');
+    const preview = document.getElementById('matchPreview');
+
+    function equiposOcupados() {
+        return (ocupados[jornada.value] || []).map(String);
+    }
+
+    function actualizarFecha() {
+        const opt = jornada.options[jornada.selectedIndex];
+        fechaBox.textContent = opt && opt.dataset.fecha ? opt.dataset.fecha : 'Seleccione una jornada';
+    }
+
+    function sincronizar(select, otro, busy) {
+        Array.from(select.options).forEach(function (opt) {
+            if (opt.value === '') { return; }
+            if (!opt.dataset.label) { opt.dataset.label = opt.textContent.trim(); }
+            const ocupado = busy.indexOf(opt.value) !== -1;
+            opt.disabled = ocupado || opt.value === otro.value;
+            opt.textContent = ocupado ? opt.dataset.label + ' (ya juega en esta jornada)' : opt.dataset.label;
+        });
+    }
+
+    function celdaEquipo(select) {
+        const wrap = document.createElement('div');
+        wrap.className = 'd-flex align-items-center gap-2';
+        const opt = select.options[select.selectedIndex];
+
+        if (!opt || opt.value === '') {
+            const vacio = document.createElement('span');
+            vacio.className = 'text-muted fst-italic';
+            vacio.textContent = 'Por elegir';
+            wrap.appendChild(vacio);
+            return wrap;
+        }
+
+        if (opt.dataset.logo) {
+            const img = document.createElement('img');
+            img.src = opt.dataset.logo;
+            img.alt = '';
+            img.className = 'team-logo-sm rounded-2';
+            img.addEventListener('error', function () {
+                const escudo = document.createElement('i');
+                escudo.className = 'bi bi-shield-fill text-muted fs-4';
+                img.replaceWith(escudo);
+            });
+            wrap.appendChild(img);
+        } else {
+            const icono = document.createElement('i');
+            icono.className = 'bi bi-shield-fill text-muted fs-4';
+            wrap.appendChild(icono);
+        }
+
+        const nombre = document.createElement('span');
+        nombre.className = 'fw-bold text-dark';
+        nombre.textContent = opt.dataset.label || opt.textContent.trim();
+        wrap.appendChild(nombre);
+
+        return wrap;
+    }
+
+    function dibujarVistaPrevia() {
+        const vs = document.createElement('span');
+        vs.className = 'badge bg-secondary-subtle text-secondary rounded-pill';
+        vs.textContent = 'VS';
+
+        preview.replaceChildren(celdaEquipo(local), vs, celdaEquipo(visita));
+    }
+
+    function refrescar() {
+        const busy = equiposOcupados();
+
+        // Si el equipo ya elegido está ocupado en la jornada nueva, se limpia la selección
+        [local, visita].forEach(function (select) {
+            if (!select.disabled && select.value && busy.indexOf(select.value) !== -1) {
+                select.value = '';
+            }
+        });
+
+        sincronizar(local, visita, busy);
+        sincronizar(visita, local, busy);
+        actualizarFecha();
+        dibujarVistaPrevia();
+    }
+
+    [jornada, local, visita].forEach(function (el) {
+        el.addEventListener('change', refrescar);
+    });
+
+    refrescar();
+})();
+</script>
+{% endblock %}
