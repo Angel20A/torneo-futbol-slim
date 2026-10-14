@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Repositories\EquipoRepository;
+use App\Repositories\GolRepository;
+use App\Repositories\JugadorRepository;
+use App\Services\UploadService;
+use App\Support\Flash;
 use DI\ContainerBuilder;
 use App\Repositories\IncidenciaRepository;
 use App\Support\Flash;
@@ -9,6 +14,8 @@ use App\Support\IncidenciaCsrf;
 use App\Validation\IncidenciaValidator;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
+use App\Repositories\JornadaRepository;
+use App\Repositories\PartidoRepository;
 
 $containerBuilder = new ContainerBuilder();
 
@@ -38,21 +45,35 @@ $containerBuilder->addDefinitions([
         );
     },
 
-    // Componentes compartidos y dependencias del módulo de Incidencias
+    // Servicio de mensajes Flash
     Flash::class => function (): Flash {
         return new Flash();
     },
 
-    IncidenciaCsrf::class => function (): IncidenciaCsrf {
-        return new IncidenciaCsrf();
+    // Servicio de subida de archivos
+    UploadService::class => function (): UploadService {
+        return new UploadService(dirname(__DIR__) . '/public');
     },
 
-    IncidenciaRepository::class => function (ContainerInterface $c): IncidenciaRepository {
-        return new IncidenciaRepository($c->get(PDO::class));
+    // Repositorios
+    EquipoRepository::class => function (ContainerInterface $c): EquipoRepository {
+        return new EquipoRepository($c->get(PDO::class));
     },
 
-    IncidenciaValidator::class => function (): IncidenciaValidator {
-        return new IncidenciaValidator();
+    JugadorRepository::class => function (ContainerInterface $c): JugadorRepository {
+        return new JugadorRepository($c->get(PDO::class));
+    },
+
+    JornadaRepository::class => function (ContainerInterface $c): JornadaRepository {
+        return new JornadaRepository($c->get(PDO::class));
+    },
+
+    PartidoRepository::class => function (ContainerInterface $c): PartidoRepository {
+        return new PartidoRepository($c->get(PDO::class));
+    },
+  
+    GolRepository::class => function (ContainerInterface $c): GolRepository {
+        return new GolRepository($c->get(PDO::class));
     },
 
     // Motor de plantillas Twig

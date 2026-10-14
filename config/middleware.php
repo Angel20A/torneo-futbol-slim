@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Middleware\SessionMiddleware;
 use Slim\App;
 use App\Middleware\IncidenciaErrorMiddleware;
 use App\Middleware\SessionMiddleware;
@@ -12,13 +13,13 @@ return function (App $app): void {
     /** @var array $settings */
     $settings = $app->getContainer()->get('settings');
 
-    // Analiza peticiones application/x-www-form-urlencoded y application/json
+    // 1. Analiza peticiones application/x-www-form-urlencoded y application/json
     $app->addBodyParsingMiddleware();
 
-    // Twig Middleware: asocia el motor de plantillas y provee extensiones a las vistas
+    // 2. Twig Middleware: asocia el motor de plantillas y provee extensiones a las vistas
     $app->add(TwigMiddleware::createFromContainer($app, Twig::class));
 
-    // Middleware de enrutamiento Slim
+    // 3. Middleware de enrutamiento de Slim
     $app->addRoutingMiddleware();
 
     // Respuestas genéricas solo para las rutas de Incidencias, incluso si no coinciden con el patrón de ID.
