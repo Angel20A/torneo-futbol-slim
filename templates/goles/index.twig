@@ -1,0 +1,267 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}Goles | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Goles</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-dribbble text-warning me-2"></i>Gestión y Control de Goleo
+        </h2>
+        <p class="text-muted small mb-0">Registro de anotaciones por partido, rendimiento individual y líderes goleadores.</p>
+    </div>
+
+    <div>
+        <a href="{{ url_for('goles.create') }}" class="btn btn-success shadow-sm rounded-3 px-3 py-2 fw-medium">
+            <i class="bi bi-plus-circle me-1"></i> Registrar Gol
+        </a>
+    </div>
+</div>
+
+<!-- Tarjetas de Métricas y Estadísticas -->
+<div class="row g-3 mb-4">
+    <!-- Tarjeta: Total de Goles -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 card-hover">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-4 bg-success-subtle text-success p-3 fs-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                    <i class="bi bi-dribbble"></i>
+                </div>
+                <div>
+                    <span class="text-muted small fw-medium text-uppercase">Total Goles Anotados</span>
+                    <h3 class="fw-bold text-dark mb-0">{{ stats.total_goles|default(0) }}</h3>
+                    <small class="text-success fw-medium">En {{ stats.total_registros|default(0) }} ficha(s) de anotación</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta: Partidos con Gol -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 card-hover">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-4 bg-primary-subtle text-primary p-3 fs-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                    <i class="bi bi-calendar3-check"></i>
+                </div>
+                <div>
+                    <span class="text-muted small fw-medium text-uppercase">Partidos con Anotaciones</span>
+                    <h3 class="fw-bold text-dark mb-0">{{ stats.partidos_con_gol|default(0) }}</h3>
+                    <small class="text-primary fw-medium">Encuentros con definición</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta: Máximo Goleador -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 p-3 card-hover">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-4 bg-warning-subtle text-warning p-3 fs-3 d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <span class="text-muted small fw-medium text-uppercase">Líder de Goleo</span>
+                    {% if stats.lider %}
+                        <h5 class="fw-bold text-dark mb-0 text-truncate">{{ stats.lider.nombres }} {{ stats.lider.apellidos }}</h5>
+                        <small class="text-secondary d-block text-truncate">
+                            <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-0.5 rounded-pill fw-bold">
+                                {{ stats.lider.total_goles }} goles
+                            </span>
+                            {{ stats.lider.equipo_nombre }}
+                        </small>
+                    {% else %}
+                        <h5 class="fw-bold text-secondary mb-0">Sin líder aún</h5>
+                        <small class="text-muted">Aún no hay goles</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros de Partido y Jugador -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="{{ url_for('goles.index') }}" class="row g-2 align-items-center">
+            <!-- Filtro por Partido -->
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="bi bi-calendar3-event"></i>
+                    </span>
+                    <select name="id_partido" class="form-select border-start-0" onchange="this.form.submit()">
+                        <option value="">-- Todos los Partidos --</option>
+                        {% for p in partidos %}
+                            <option value="{{ p.id_partido }}" {% if selected_partido == p.id_partido %}selected{% endif %}>
+                                J{{ p.numero_jornada }}: {{ p.equipo_local_nombre }} vs {{ p.equipo_visita_nombre }} ({{ p.fecha|date("d/m/Y") }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filtro por Jugador -->
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="bi bi-person"></i>
+                    </span>
+                    <select name="id_jugador" class="form-select border-start-0" onchange="this.form.submit()">
+                        <option value="">-- Todos los Jugadores --</option>
+                        {% for j in jugadores %}
+                            <option value="{{ j.id_jugador }}" {% if selected_jugador == j.id_jugador %}selected{% endif %}>
+                                {{ j.nombres }} {{ j.apellidos }} ({{ j.equipo_nombre }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary flex-grow-1 rounded-3">
+                    Filtrar
+                </button>
+                {% if selected_partido or selected_jugador %}
+                    <a href="{{ url_for('goles.index') }}" class="btn btn-outline-secondary rounded-3" title="Limpiar filtros">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if goles is empty %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+        <div class="my-4">
+            <i class="bi bi-dribbble display-1 text-muted opacity-50 mb-3 d-block"></i>
+            <h4 class="fw-bold text-secondary">No se encontraron anotaciones</h4>
+            <p class="text-muted small">
+                {% if selected_partido or selected_jugador %}
+                    No existen registros de goles que coincidan con los filtros aplicados.
+                {% else %}
+                    Aún no se han registrado goles para los partidos disputados.
+                {% endif %}
+            </p>
+            {% if selected_partido or selected_jugador %}
+                <a href="{{ url_for('goles.index') }}" class="btn btn-outline-secondary rounded-pill px-4 mt-2">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Restablecer Filtros
+                </a>
+            {% else %}
+                <a href="{{ url_for('goles.create') }}" class="btn btn-success rounded-pill px-4 mt-2">
+                    <i class="bi bi-plus-lg me-1"></i> Registrar Primer Gol
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <!-- Tabla de Goles Moderna -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-secondary small text-uppercase fw-semibold">
+                    <tr>
+                        <th class="ps-4">Partido / Encuentro</th>
+                        <th>Jugador Anotador</th>
+                        <th>Club</th>
+                        <th class="text-center">Goles</th>
+                        <th>Fecha de Registro</th>
+                        <th class="text-end pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for g in goles %}
+                        <tr>
+                            <!-- Partido -->
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-dark-subtle text-dark border px-2 py-1 rounded-2 fw-semibold">
+                                        J{{ g.numero_jornada }}
+                                    </span>
+                                    <div>
+                                        <div class="fw-bold text-dark">
+                                            {{ g.equipo_local_nombre }} <span class="text-muted fw-normal">vs</span> {{ g.equipo_visita_nombre }}
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar-event me-1"></i>{{ g.partido_fecha|date("d/m/Y") }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Jugador -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <img src="{{ g.jugador_foto }}" 
+                                         alt="{{ g.jugador_nombres }}" 
+                                         class="rounded-circle shadow-sm border border-2 border-white object-fit-cover" 
+                                         width="42" 
+                                         height="42" 
+                                         onerror="this.onerror=null;this.src='https://placehold.co/42x42/ced4da/495057?text=Foto';">
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ g.jugador_nombres }} {{ g.jugador_apellidos }}</div>
+                                        <span class="badge bg-light text-muted border px-2 py-0.5 rounded-pill font-monospace small">
+                                            ID #{{ g.id_jugador }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Club del Jugador -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if g.equipo_jugador_foto %}
+                                        <img src="{{ g.equipo_jugador_foto }}" alt="{{ g.equipo_jugador_nombre }}" class="team-logo-sm rounded-2">
+                                    {% else %}
+                                        <i class="bi bi-shield-fill text-muted"></i>
+                                    {% endif %}
+                                    <span class="fw-medium text-secondary">{{ g.equipo_jugador_nombre }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Cantidad de Goles -->
+                            <td class="text-center">
+                                <span class="badge bg-success text-white px-3 py-2 rounded-pill fs-6 shadow-sm">
+                                    ⚽ {{ g.cantidad }} {{ g.cantidad == 1 ? 'Gol' : 'Goles' }}
+                                </span>
+                            </td>
+
+                            <!-- Fecha Registro -->
+                            <td class="text-muted small">
+                                <div>{{ g.creado_en|date("d/m/Y") }}</div>
+                                <small class="text-secondary">{{ g.creado_en|date("H:i") }} hrs</small>
+                            </td>
+
+                            <!-- Acciones -->
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/goles/{{ g.id_gol }}/editar" class="btn btn-outline-primary" title="Editar Anotación">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <form action="/goles/{{ g.id_gol }}/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar esta anotación de {{ g.jugador_nombres|e('js') }} {{ g.jugador_apellidos|e('js') }}?');">
+                                        <button type="submit" class="btn btn-outline-danger" title="Eliminar Anotación">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Mostrando <strong>{{ goles|length }}</strong> registro(s) de anotación</span>
+            <span class="text-muted small">Total acumulado en vista: <strong>{{ stats.total_goles|default(0) }}</strong> goles</span>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

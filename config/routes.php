@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Controllers\EquipoController;
+use App\Controllers\GolController;
 use App\Controllers\HomeController;
 use App\Controllers\JugadorController;
 use Slim\App;
@@ -43,8 +44,16 @@ return function (App $app): void {
         // Rutas futuras para fixture y programación
     });
 
+    // ==========================================
+    // Módulo de Goles (CRUD)
+    // ==========================================
     $app->group('/goles', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para anotaciones
+        $group->get('', [GolController::class, 'index'])->setName('goles.index');
+        $group->get('/crear', [GolController::class, 'create'])->setName('goles.create');
+        $group->post('', [GolController::class, 'store'])->setName('goles.store');
+        $group->get('/{id:[0-9]+}/editar', [GolController::class, 'edit'])->setName('goles.edit');
+        $group->post('/{id:[0-9]+}/editar', [GolController::class, 'update'])->setName('goles.update');
+        $group->post('/{id:[0-9]+}/eliminar', [GolController::class, 'delete'])->setName('goles.delete');
     });
 
     $app->group('/incidencias', function (RouteCollectorProxy $group): void {

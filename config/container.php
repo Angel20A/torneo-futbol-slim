@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Repositories\EquipoRepository;
+use App\Repositories\GolRepository;
 use App\Repositories\JugadorRepository;
 use App\Services\UploadService;
 use App\Support\Flash;
@@ -55,6 +56,10 @@ $containerBuilder->addDefinitions([
 
     JugadorRepository::class => function (ContainerInterface $c): JugadorRepository {
         return new JugadorRepository($c->get(PDO::class));
+    },
+
+    GolRepository::class => function (ContainerInterface $c): GolRepository {
+        return new GolRepository($c->get(PDO::class));
     },
 
     // Motor de plantillas Twig
