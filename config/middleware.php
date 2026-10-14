@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Middleware\SessionMiddleware;
 use Slim\App;
+use App\Middleware\IncidenciaErrorMiddleware;
 use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
 
@@ -20,11 +21,15 @@ return function (App $app): void {
     // 3. Middleware de enrutamiento de Slim
     $app->addRoutingMiddleware();
 
-    // 4. Middleware de ciclo de vida seguro de Sesiones
-    // Al registrarse aquí (orden LIFO), se ejecuta antes del enrutamiento y después del ErrorMiddleware
-    $app->add(SessionMiddleware::class);
+    // Respuestas genéricas solo para las rutas de Incidencias, incluso si no coinciden con el patrón de ID.
+    $app->add(new IncidenciaErrorMiddleware());
 
-    // 5. Middleware de captura de excepciones y errores (debe ser el más externo en ejecución)
+    // Orden LIFO: inicia la sesión antes del enrutamiento y la cierra después de la respuesta.
+    $app->add(new SessionMiddleware([
+        'save_path' => dirname(__DIR__) . '/var/sessions',
+    ]));
+
+    // Middleware de manejo de errores
     $app->addErrorMiddleware(
         $settings['app']['debug'],
         true,

@@ -1,0 +1,8 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}Incidencias | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger" role="alert">{{ message }}</div>
+<a class="btn btn-outline-secondary" href="{{ url_for('incidencias.index') }}">Volver a incidencias</a>
+{% endblock %}
