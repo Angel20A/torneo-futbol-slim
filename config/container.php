@@ -10,6 +10,8 @@ use App\Support\Flash;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
+use App\Repositories\JornadaRepository;
+use App\Repositories\PartidoRepository;
 
 $containerBuilder = new ContainerBuilder();
 
@@ -58,6 +60,14 @@ $containerBuilder->addDefinitions([
         return new JugadorRepository($c->get(PDO::class));
     },
 
+    JornadaRepository::class => function (ContainerInterface $c): JornadaRepository {
+        return new JornadaRepository($c->get(PDO::class));
+    },
+
+    PartidoRepository::class => function (ContainerInterface $c): PartidoRepository {
+        return new PartidoRepository($c->get(PDO::class));
+    },
+  
     GolRepository::class => function (ContainerInterface $c): GolRepository {
         return new GolRepository($c->get(PDO::class));
     },

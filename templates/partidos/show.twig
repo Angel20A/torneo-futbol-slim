@@ -1,0 +1,162 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ title }} | {{ appName }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-2">
+        <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('partidos.index') }}" class="text-decoration-none text-muted">Partidos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Hoja del partido</li>
+    </ol>
+</nav>
+
+<!-- Encabezado del partido -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div class="text-muted small">
+                <i class="bi bi-flag-fill text-info me-1"></i>Jornada {{ partido.numero_jornada }}
+                · <i class="bi bi-calendar3 mx-1"></i>{{ partido.fecha|date("d/m/Y") }}
+                {% if partido.jornada_descripcion %}· {{ partido.jornada_descripcion }}{% endif %}
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                {% if partido.estado == 'hoy' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">Hoy</span>
+                {% elseif partido.estado == 'jugado' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">Jugado</span>
+                {% else %}
+                    <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">Programado</span>
+                {% endif %}
+                <a href="{{ url_for('partidos.edit', {'id': partido.id_partido}) }}" class="btn btn-sm btn-outline-primary rounded-3">
+                    <i class="bi bi-pencil-square me-1"></i>Editar
+                </a>
+            </div>
+        </div>
+
+        <div class="row align-items-center text-center g-3">
+            <div class="col-5">
+                <div class="mb-2">
+                    {% include 'partidos/_logo.twig' with {'foto': partido.local_foto_url, 'nombre': partido.local_nombre, 'tam': 'md'} only %}
+                </div>
+                <h5 class="fw-bold mb-0">{{ partido.local_nombre }}</h5>
+                <small class="text-muted">Local</small>
+            </div>
+
+            <div class="col-2">
+                {% if partido.total_registros_gol > 0 %}
+                    <div class="display-6 fw-bold text-dark">{{ partido.goles_local }} - {{ partido.goles_visita }}</div>
+                    <small class="text-muted">según goles registrados</small>
+                {% elseif partido.estado == 'programado' %}
+                    <div class="display-6 fw-bold text-muted">VS</div>
+                {% else %}
+                    <div class="display-6 fw-bold text-muted">VS</div>
+                    <small class="text-muted">sin goles registrados</small>
+                {% endif %}
+            </div>
+
+            <div class="col-5">
+                {% if partido.visita_foto_url %}
+                    <img src="{{ partido.visita_foto_url }}" alt="{{ partido.visita_nombre }}" class="team-logo-md rounded-3 shadow-sm bg-white p-1 mb-2">
+                {% else %}
+                    <i class="bi bi-shield-fill text-muted display-5 d-block mb-1"></i>
+                {% endif %}
+                <h5 class="fw-bold mb-0">{{ partido.visita_nombre }}</h5>
+                <small class="text-muted">Visitante</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if suspendidos > 0 %}
+    <div class="alert alert-warning shadow-sm rounded-3 d-flex align-items-center mb-4">
+        <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+        <div>
+            <strong>{{ suspendidos }} {{ suspendidos == 1 ? 'jugador suspendido' : 'jugadores suspendidos' }}</strong>
+            para esta jornada. Aparecen marcados en la plantilla de su equipo y no deben alinearse.
+        </div>
+    </div>
+{% endif %}
+
+<!-- Plantillas de ambos equipos -->
+{% set vistaEquipos = [
+    {'nombre': partido.local_nombre, 'rol': 'Local', 'id': partido.id_equipo_local, 'jugadores': plantel_local},
+    {'nombre': partido.visita_nombre, 'rol': 'Visitante', 'id': partido.id_equipo_visita, 'jugadores': plantel_visita}
+] %}
+<div class="row g-4 mb-4">
+    {% for eq in vistaEquipos %}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                <div class="card-header bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>{{ eq.nombre }} <span class="text-muted fw-normal">({{ eq.rol }})</span></h6>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill">{{ eq.jugadores|length }}</span>
+                </div>
+
+                {% if eq.jugadores is empty %}
+                    <div class="p-4 text-center text-muted small">
+                        <i class="bi bi-person-slash d-block fs-2 opacity-50 mb-2"></i>
+                        Este equipo aún no tiene jugadores registrados.
+                        <div class="mt-2">
+                            <a href="{{ url_for('jugadores.create') }}" class="btn btn-sm btn-outline-primary rounded-pill">Inscribir jugador</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <ul class="list-group list-group-flush">
+                        {% for j in eq.jugadores %}
+                            <li class="list-group-item d-flex align-items-center gap-3 py-2 {% if j.suspendido %}bg-danger-subtle{% endif %}">
+                                <img src="{{ j.foto_url }}" alt="{{ j.nombres }}" class="rounded-circle border border-2 border-white shadow-sm object-fit-cover" width="40" height="40"
+                                     onerror="this.onerror=null;this.src='https://placehold.co/40x40/ced4da/495057?text=Foto';">
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold text-dark">{{ j.nombres }} {{ j.apellidos }}</div>
+                                    <small class="text-muted">{{ j.edad }} años</small>
+                                </div>
+                                {% if j.goles > 0 %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill" title="Goles en este partido">
+                                        <i class="bi bi-dribbble me-1"></i>{{ j.goles }}
+                                    </span>
+                                {% endif %}
+                                {% if j.suspendido %}
+                                    <span class="badge bg-danger rounded-pill">Suspendido</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Tarjetas registradas en el partido -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white border-bottom px-4 py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-exclamation-octagon-fill text-danger me-2"></i>Incidencias del partido</h6>
+    </div>
+    {% if incidencias is empty %}
+        <div class="p-4 text-center text-muted small">No se registraron tarjetas en este partido.</div>
+    {% else %}
+        <ul class="list-group list-group-flush">
+            {% for i in incidencias %}
+                <li class="list-group-item d-flex align-items-start gap-3 py-3">
+                    <i class="bi bi-square-fill fs-4 {{ i.tipo_tarjeta == 'roja' ? 'text-danger' : 'text-warning' }}"></i>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold text-dark">
+                            {{ i.nombres }} {{ i.apellidos }}
+                            <span class="text-muted fw-normal">· {{ i.equipo_nombre }}</span>
+                        </div>
+                        <div class="small text-muted">{{ i.descripcion }}</div>
+                        {% if i.tipo_tarjeta == 'roja' and i.fecha_suspension %}
+                            <div class="small text-danger"><i class="bi bi-slash-circle me-1"></i>Suspendido para la fecha {{ i.fecha_suspension|date("d/m/Y") }}</div>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-light text-muted border rounded-pill">{{ i.fecha_incidencia|date("d/m/Y") }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('partidos.index') }}" class="btn btn-light rounded-3 px-4 fw-medium">
+    <i class="bi bi-arrow-left me-1"></i> Volver a Partidos
+</a>
+{% endblock %}

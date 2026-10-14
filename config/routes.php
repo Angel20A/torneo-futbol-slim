@@ -8,6 +8,8 @@ use App\Controllers\HomeController;
 use App\Controllers\JugadorController;
 use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
+use App\Controllers\PartidoController;
+use App\Controllers\JornadaController;
 
 return function (App $app): void {
     // Ruta Principal / Dashboard
@@ -38,10 +40,28 @@ return function (App $app): void {
     });
 
     // ==========================================
-    // Módulos Futuros
+    // Módulo de Partidos (CRUD + hoja del partido)
     // ==========================================
     $app->group('/partidos', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para fixture y programación
+        $group->get('', [PartidoController::class, 'index'])->setName('partidos.index');
+        $group->get('/crear', [PartidoController::class, 'create'])->setName('partidos.create');
+        $group->post('', [PartidoController::class, 'store'])->setName('partidos.store');
+        $group->get('/{id:[0-9]+}', [PartidoController::class, 'show'])->setName('partidos.show');
+        $group->get('/{id:[0-9]+}/editar', [PartidoController::class, 'edit'])->setName('partidos.edit');
+        $group->post('/{id:[0-9]+}/editar', [PartidoController::class, 'update'])->setName('partidos.update');
+        $group->post('/{id:[0-9]+}/eliminar', [PartidoController::class, 'delete'])->setName('partidos.delete');
+    });
+
+    // ==========================================
+    // Catálogo de Jornadas (parte del módulo de Partidos)
+    // ==========================================
+    $app->group('/jornadas', function (RouteCollectorProxy $group): void {
+        $group->get('', [JornadaController::class, 'index'])->setName('jornadas.index');
+        $group->get('/crear', [JornadaController::class, 'create'])->setName('jornadas.create');
+        $group->post('', [JornadaController::class, 'store'])->setName('jornadas.store');
+        $group->get('/{id:[0-9]+}/editar', [JornadaController::class, 'edit'])->setName('jornadas.edit');
+        $group->post('/{id:[0-9]+}/editar', [JornadaController::class, 'update'])->setName('jornadas.update');
+        $group->post('/{id:[0-9]+}/eliminar', [JornadaController::class, 'delete'])->setName('jornadas.delete');
     });
 
     // ==========================================
