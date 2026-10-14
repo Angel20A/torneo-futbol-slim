@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Middleware\SessionMiddleware;
 use Slim\App;
 use App\Middleware\IncidenciaErrorMiddleware;
-use App\Middleware\SessionMiddleware;
 use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
 
