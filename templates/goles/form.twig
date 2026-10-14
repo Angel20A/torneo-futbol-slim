@@ -1,0 +1,205 @@
+{% extends 'layouts/base.twig' %}
+
+{% set isEdit = gol.id_gol is defined and gol.id_gol %}
+{% block title %}{{ title }} | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('goles.index') }}" class="text-decoration-none text-muted">Goles</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ isEdit ? 'Editar' : 'Registrar' }}</li>
+            </ol>
+        </nav>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="p-2.5 rounded-3 bg-success-subtle text-success fs-4">
+                        <i class="bi bi-dribbble"></i>
+                    </span>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">{{ isEdit ? 'Editar Anotación' : 'Registrar Nueva Anotación' }}</h4>
+                        <small class="text-muted">{{ isEdit ? 'Actualice la cantidad de goles o la asignación de la jugada' : 'Asigne los goles marcados por un jugador en un partido específico' }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                {% if errors is not empty %}
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                            <strong>Por favor corrija los siguientes errores:</strong>
+                        </div>
+                        <ul class="mb-0 ps-4 small">
+                            {% for err in errors %}
+                                <li>{{ err }}</li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+
+                {% if partidos is empty %}
+                    <div class="alert alert-warning rounded-3 mb-4">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        No existen partidos registrados aún en el fixture. Debe programar partidos antes de cargar goles.
+                    </div>
+                {% endif %}
+
+                {% if jugadores is empty %}
+                    <div class="alert alert-warning rounded-3 mb-4">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        No existen jugadores registrados aún. Debe inscribir jugadores antes de registrar anotaciones.
+                        <div class="mt-2">
+                            <a href="{{ url_for('jugadores.create') }}" class="btn btn-sm btn-warning">Inscribir Jugadores</a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <form action="{{ isEdit ? '/goles/' ~ gol.id_gol ~ '/editar' : '/goles' }}" method="POST" novalidate id="formGol">
+                    <!-- Selección de Partido -->
+                    <div class="mb-3">
+                        <label for="id_partido" class="form-label fw-semibold text-secondary">
+                            Partido / Encuentro Disputado <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-lg rounded-3 fs-6" id="id_partido" name="id_partido" required onchange="filterPlayersByMatch()">
+                            <option value="">-- Seleccionar Partido --</option>
+                            {% for p in partidos %}
+                                <option value="{{ p.id_partido }}" 
+                                        data-local="{{ p.id_equipo_local }}" 
+                                        data-visita="{{ p.id_equipo_visita }}"
+                                        data-local-nom="{{ p.equipo_local_nombre }}"
+                                        data-visita-nom="{{ p.equipo_visita_nombre }}"
+                                        {% if gol.id_partido|default(0) == p.id_partido %}selected{% endif %}>
+                                    Jornada {{ p.numero_jornada }}: {{ p.equipo_local_nombre }} vs {{ p.equipo_visita_nombre }} ({{ p.fecha|date("d/m/Y") }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Indica la fecha y el cruce oficial donde se produjeron las anotaciones.</div>
+                    </div>
+
+                    <!-- Selección de Jugador Anotador -->
+                    <div class="mb-3">
+                        <label for="id_jugador" class="form-label fw-semibold text-secondary">
+                            Jugador Anotador <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select form-select-lg rounded-3 fs-6" id="id_jugador" name="id_jugador" required>
+                            <option value="">-- Seleccionar Jugador --</option>
+                            {% for j in jugadores %}
+                                <option value="{{ j.id_jugador }}" 
+                                        data-equipo="{{ j.id_equipo }}"
+                                        data-club="{{ j.equipo_nombre }}"
+                                        {% if gol.id_jugador|default(0) == j.id_jugador %}selected{% endif %}>
+                                    {{ j.nombres }} {{ j.apellidos }} — {{ j.equipo_nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">El menor debe pertenecer a uno de los dos equipos participantes en el encuentro.</div>
+                    </div>
+
+                    <!-- Cantidad de Goles -->
+                    <div class="mb-4">
+                        <label for="cantidad" class="form-label fw-semibold text-secondary">
+                            Cantidad de Goles <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light text-success fs-5">
+                                <i class="bi bi-dribbble"></i>
+                            </span>
+                            <input type="number" 
+                                   class="form-control rounded-end-3 fs-5 fw-bold" 
+                                   id="cantidad" 
+                                   name="cantidad" 
+                                   value="{{ gol.cantidad|default(1) }}" 
+                                   min="1" 
+                                   max="20" 
+                                   step="1" 
+                                   required>
+                        </div>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setGoles(1)">1 Gol</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setGoles(2)">Doblete (2)</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setGoles(3)">Hat-Trick (3)</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setGoles(4)">Póker (4)</button>
+                        </div>
+                        <div class="form-text">Total de anotaciones convertidas por el jugador en este encuentro.</div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{{ url_for('goles.index') }}" class="btn btn-light rounded-3 px-4 fw-medium">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success rounded-3 px-4 fw-medium shadow-sm" {% if partidos is empty or jugadores is empty %}disabled{% endif %}>
+                            <i class="bi bi-check2-circle me-1"></i> {{ isEdit ? 'Guardar Cambios' : 'Registrar Anotación' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setGoles(val) {
+    document.getElementById('cantidad').value = val;
+}
+
+function filterPlayersByMatch() {
+    const partidoSelect = document.getElementById('id_partido');
+    const jugadorSelect = document.getElementById('id_jugador');
+    const selectedOption = partidoSelect.options[partidoSelect.selectedIndex];
+
+    if (!selectedOption || !selectedOption.value) {
+        // Mostrar todas las opciones de jugadores si no se ha seleccionado partido
+        for (let i = 0; i < jugadorSelect.options.length; i++) {
+            jugadorSelect.options[i].hidden = false;
+        }
+        return;
+    }
+
+    const localId = selectedOption.getAttribute('data-local');
+    const visitaId = selectedOption.getAttribute('data-visita');
+
+    let currentSelectedValid = false;
+
+    for (let i = 0; i < jugadorSelect.options.length; i++) {
+        const opt = jugadorSelect.options[i];
+        if (!opt.value) {
+            opt.hidden = false;
+            continue;
+        }
+        const equipoId = opt.getAttribute('data-equipo');
+        if (equipoId === localId || equipoId === visitaId) {
+            opt.hidden = false;
+            if (opt.selected) {
+                currentSelectedValid = true;
+            }
+        } else {
+            opt.hidden = true;
+            if (opt.selected) {
+                opt.selected = false;
+            }
+        }
+    }
+
+    if (!currentSelectedValid && jugadorSelect.value !== '') {
+        jugadorSelect.value = '';
+    }
+}
+
+// Ejecutar filtro al cargar la página si ya hay un partido seleccionado
+document.addEventListener('DOMContentLoaded', function() {
+    const partidoSelect = document.getElementById('id_partido');
+    if (partidoSelect && partidoSelect.value) {
+        filterPlayersByMatch();
+    }
+});
+</script>
+{% endblock %}
