@@ -1,0 +1,179 @@
+{% extends 'layouts/base.twig' %}
+
+{% set isEdit = jornada.id_jornada is defined and jornada.id_jornada %}
+{% block title %}{{ title }} | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-2">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('partidos.index') }}" class="text-decoration-none text-muted">Partidos</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('jornadas.index') }}" class="text-decoration-none text-muted">Jornadas</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ isEdit ? 'Editar' : 'Registrar' }}</li>
+            </ol>
+        </nav>
+
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="p-2.5 rounded-3 bg-info-subtle text-info fs-4">
+                        <i class="bi bi-flag-fill"></i>
+                    </span>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark">{{ isEdit ? 'Editar Jornada' : 'Habilitar Nueva Jornada' }}</h4>
+                        <small class="text-muted">{{ isEdit ? 'Modifique el número, la fecha o la descripción' : 'Defina el número y la fecha en que se jugará' }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                {% if errors is not empty %}
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3 mb-4" role="alert">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                            <strong>Por favor corrija los siguientes errores:</strong>
+                        </div>
+                        <ul class="mb-0 ps-4 small">
+                            {% for err in errors %}
+                                <li>{{ err }}</li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+
+                {% if isEdit and ya_realizada %}
+                    <div class="alert alert-warning rounded-3 mb-4 small">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                            <strong>Esta jornada ya se realizó el {{ original.fecha_juego|date("d/m/Y") }}</strong>
+                        </div>
+                        Tiene
+                        {% if original.total_partidos > 0 %}{{ original.total_partidos }} {{ original.total_partidos == 1 ? 'partido' : 'partidos' }}{% endif %}{% if original.total_partidos > 0 and original.total_suspensiones > 0 %} y {% endif %}{% if original.total_suspensiones > 0 %}{{ original.total_suspensiones }} {{ original.total_suspensiones == 1 ? 'suspensión asignada' : 'suspensiones asignadas' }}{% endif %}.
+                        Cambiar la <strong>fecha</strong> modifica también la de esos partidos y suspensiones, y cambiar el <strong>número</strong> altera cómo se identifica la jornada en todo el sistema. Revise bien antes de guardar.
+                    </div>
+                {% elseif isEdit and jornada.total_partidos > 0 %}
+                    <div class="alert alert-info rounded-3 mb-4 small">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Esta jornada tiene {{ jornada.total_partidos }} {{ jornada.total_partidos == 1 ? 'partido' : 'partidos' }}.
+                        Si cambia la fecha, la de sus partidos se actualizará automáticamente.
+                    </div>
+                {% endif %}
+
+                <form action="{{ isEdit ? url_for('jornadas.update', {'id': jornada.id_jornada}) : url_for('jornadas.store') }}" method="POST" novalidate>
+                    <div class="row g-3 mb-3">
+                        <!-- Número de jornada -->
+                        <div class="col-md-5">
+                            <label for="numero_jornada" class="form-label fw-semibold text-secondary">
+                                Número <span class="text-danger">*</span>
+                            </label>
+                            <input type="number"
+                                   class="form-control rounded-3"
+                                   id="numero_jornada"
+                                   name="numero_jornada"
+                                   value="{{ jornada.numero_jornada|default('') }}"
+                                   min="1" max="999" step="1"
+                                   placeholder="Ej. 4"
+                                   required>
+                            <div class="form-text">Debe ser único (1 a 999).</div>
+                        </div>
+
+                        <!-- Fecha de juego -->
+                        <div class="col-md-7">
+                            <label for="fecha_juego" class="form-label fw-semibold text-secondary">
+                                Fecha de juego <span class="text-danger">*</span>
+                            </label>
+                            <input type="date"
+                                   class="form-control rounded-3"
+                                   id="fecha_juego"
+                                   name="fecha_juego"
+                                   value="{{ jornada.fecha_juego|default('') }}"
+                                   required>
+                            <div class="form-text" id="rangoFecha">Las fechas deben seguir el orden de las jornadas.</div>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mb-4">
+                        <label for="descripcion" class="form-label fw-semibold text-secondary">Descripción <span class="text-muted fw-normal">(opcional)</span></label>
+                        <input type="text"
+                               class="form-control rounded-3"
+                               id="descripcion"
+                               name="descripcion"
+                               value="{{ jornada.descripcion|default('') }}"
+                               maxlength="150"
+                               placeholder="Ej. Jornada 4 - Semifinales">
+                        <div class="form-text">Ayuda a identificar la jornada (máx. 150 caracteres).</div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a href="{{ url_for('jornadas.index') }}" class="btn btn-light rounded-3 px-4 fw-medium">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-info text-white rounded-3 px-4 fw-medium shadow-sm">
+                            <i class="bi bi-check2-circle me-1"></i> {{ isEdit ? 'Actualizar Jornada' : 'Guardar Jornada' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    // Otras jornadas (sin la que se edita): sirven para indicar entre qué fechas puede ir esta
+    const referencias = {{ referencias|json_encode|raw }};
+
+    const numero = document.getElementById('numero_jornada');
+    const fecha = document.getElementById('fecha_juego');
+    const rango = document.getElementById('rangoFecha');
+
+    function sumarDias(iso, dias) {
+        const d = new Date(iso + 'T00:00:00Z');
+        d.setUTCDate(d.getUTCDate() + dias);
+        return d.toISOString().slice(0, 10);
+    }
+
+    function actualizarRango() {
+        const n = parseInt(numero.value, 10);
+        fecha.removeAttribute('min');
+        fecha.removeAttribute('max');
+
+        if (isNaN(n)) {
+            rango.textContent = 'Las fechas deben seguir el orden de las jornadas.';
+            return;
+        }
+
+        let anterior = null;
+        let siguiente = null;
+        referencias.forEach(function (r) {
+            if (r.numero < n && (anterior === null || r.numero > anterior.numero)) { anterior = r; }
+            if (r.numero > n && (siguiente === null || r.numero < siguiente.numero)) { siguiente = r; }
+        });
+
+        const partes = [];
+        if (anterior) {
+            fecha.min = sumarDias(anterior.fecha, 1);
+            partes.push('posterior al ' + anterior.fecha_txt + ' (Jornada ' + anterior.numero + ')');
+        }
+        if (siguiente) {
+            fecha.max = sumarDias(siguiente.fecha, -1);
+            partes.push('anterior al ' + siguiente.fecha_txt + ' (Jornada ' + siguiente.numero + ')');
+        }
+
+        rango.textContent = partes.length
+            ? 'Debe ser ' + partes.join(' y ') + '.'
+            : 'Las fechas deben seguir el orden de las jornadas.';
+    }
+
+    numero.addEventListener('input', actualizarRango);
+    actualizarRango();
+})();
+</script>
+{% endblock %}
