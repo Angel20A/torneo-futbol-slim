@@ -8,6 +8,9 @@
 /public/uploads/*
 !/public/uploads/.gitkeep
 
+# Sesiones privadas del módulo de incidencias
+/var/sessions/
+
 # Archivos de configuración de IDEs y SO
 .vscode/
 .idea/
