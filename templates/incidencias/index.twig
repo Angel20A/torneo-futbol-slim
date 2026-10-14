@@ -1,0 +1,137 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}Incidencias | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Incidencias</h1>
+        <p class="text-muted mb-0">Tarjetas registradas para los jugadores del torneo.</p>
+    </div>
+    <a class="btn btn-success" href="{{ url_for('incidencias.create') }}">
+        <i class="bi bi-plus-lg me-1"></i> Registrar incidencia
+    </a>
+</div>
+
+<form class="card border-0 shadow-sm mb-4" method="get" action="{{ url_for('incidencias.index') }}">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Filtros</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" for="filtro-equipo">Equipo</label>
+                <select class="form-select{% if errors.id_equipo is defined %} is-invalid{% endif %}" id="filtro-equipo" name="id_equipo">
+                    <option value="">Todos los equipos</option>
+                    {% for equipo in equipos %}
+                        <option value="{{ equipo.id_equipo }}"{% if filters.id_equipo == equipo.id_equipo %} selected{% endif %}>{{ equipo.nombre }}</option>
+                    {% endfor %}
+                </select>
+                {% if errors.id_equipo is defined %}<div class="invalid-feedback">{{ errors.id_equipo }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="filtro-jugador">Jugador</label>
+                <select class="form-select{% if errors.id_jugador is defined %} is-invalid{% endif %}" id="filtro-jugador" name="id_jugador">
+                    <option value="">Todos los jugadores</option>
+                    {% for jugador in jugadores %}
+                        <option value="{{ jugador.id_jugador }}" data-equipo="{{ jugador.id_equipo }}"{% if filters.id_jugador == jugador.id_jugador %} selected{% endif %}>
+                            {{ jugador.nombres }} {{ jugador.apellidos }} — {{ jugador.equipo_nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if errors.id_jugador is defined %}<div class="invalid-feedback">{{ errors.id_jugador }}</div>{% endif %}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="filtro-tarjeta">Tarjeta</label>
+                <select class="form-select{% if errors.tipo_tarjeta is defined %} is-invalid{% endif %}" id="filtro-tarjeta" name="tipo_tarjeta">
+                    <option value="">Ambas</option>
+                    <option value="amarilla"{% if filters.tipo_tarjeta == 'amarilla' %} selected{% endif %}>Amarilla</option>
+                    <option value="roja"{% if filters.tipo_tarjeta == 'roja' %} selected{% endif %}>Roja</option>
+                </select>
+                {% if errors.tipo_tarjeta is defined %}<div class="invalid-feedback">{{ errors.tipo_tarjeta }}</div>{% endif %}
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button class="btn btn-outline-success flex-grow-1" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('incidencias.index') }}" aria-label="Limpiar filtros" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Jugador / equipo</th>
+                        <th scope="col">Partido</th>
+                        <th scope="col">Tarjeta</th>
+                        <th scope="col">Incidencia</th>
+                        <th scope="col">Suspensión</th>
+                        <th scope="col">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for incidencia in incidencias %}
+                        <tr>
+                            <td>
+                                <strong>{{ incidencia.nombres }} {{ incidencia.apellidos }}</strong><br>
+                                <small class="text-muted">{{ incidencia.equipo_nombre }}</small>
+                            </td>
+                            <td>
+                                {{ incidencia.equipo_local }} vs. {{ incidencia.equipo_visita }}<br>
+                                <small class="text-muted">Jornada {{ incidencia.numero_jornada }} · {{ incidencia.partido_fecha }}</small>
+                            </td>
+                            <td>
+                                <span class="badge {% if incidencia.tipo_tarjeta == 'roja' %}text-bg-danger{% else %}text-bg-warning{% endif %}">
+                                    {{ incidencia.tipo_tarjeta|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ incidencia.fecha_incidencia }}</small><br>
+                                <span style="white-space: pre-wrap">{{ incidencia.descripcion }}</span>
+                            </td>
+                            <td>
+                                {% if incidencia.fecha_suspension %}
+                                    {{ incidencia.fecha_suspension }}
+                                    {% if incidencia.numero_jornada_suspension %}<br><small class="text-muted">Jornada {{ incidencia.numero_jornada_suspension }}</small>{% endif %}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('incidencias.edit', {'id': incidencia.id_incidencia}) }}">Editar</a>
+                                    <form method="post" action="{{ url_for('incidencias.delete', {'id': incidencia.id_incidencia}) }}" onsubmit="return confirm('¿Eliminar esta incidencia? Esta acción no se puede deshacer.');">
+                                        <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">No hay incidencias para mostrar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const team = document.getElementById('filtro-equipo');
+    const player = document.getElementById('filtro-jugador');
+    team.addEventListener('change', () => {
+        for (const option of player.options) {
+            if (!option.value) continue;
+            const allowed = !team.value || option.dataset.equipo === team.value;
+            option.hidden = !allowed;
+            option.disabled = !allowed;
+            if (!allowed && option.selected) player.value = '';
+        }
+    });
+})();
+</script>
+{% endblock %}

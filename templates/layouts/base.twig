@@ -126,32 +126,18 @@
     <!-- Contenido Dinámico -->
     <main class="main-content py-4">
         <div class="container">
-            {# Mensajes Flash globales #}
+            {# Mensajes de resultado compartidos por todos los módulos #}
             {% set flashMessages = flash ? flash.getMessages() : {} %}
             {% if flashMessages is not empty %}
-                <div class="row">
-                    <div class="col-12">
-                        {% for type, messages in flashMessages %}
-                            {% for msg in messages %}
-                                <div class="alert alert-{{ type }} alert-dismissible fade show shadow-sm rounded-3 mb-3 d-flex align-items-center" role="alert">
-                                    {% if type == 'success' %}
-                                        <i class="bi bi-check-circle-fill fs-5 me-2"></i>
-                                    {% elseif type == 'danger' %}
-                                        <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
-                                    {% elseif type == 'warning' %}
-                                        <i class="bi bi-exclamation-circle-fill fs-5 me-2"></i>
-                                    {% else %}
-                                        <i class="bi bi-info-circle-fill fs-5 me-2"></i>
-                                    {% endif %}
-                                    <div class="flex-grow-1">{{ msg }}</div>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-                                </div>
-                            {% endfor %}
-                        {% endfor %}
-                    </div>
-                </div>
+                {% for type, messages in flashMessages %}
+                    {% for msg in messages %}
+                        <div class="alert alert-{{ type }} alert-dismissible fade show shadow-sm rounded-3 mb-3" role="alert">
+                            {{ msg }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
             {% endif %}
-
             {% block content %}{% endblock %}
         </div>
     </main>
