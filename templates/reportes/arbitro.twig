@@ -5,18 +5,11 @@
 {% block styles %}
 <style>
     .player-photo {
-        width: 54px;
-        height: 54px;
+        width: 52px;
+        height: 52px;
         object-fit: cover;
         border-radius: 50%;
         border: 2px solid #dee2e6;
-    }
-    .player-photo-lg {
-        width: 64px;
-        height: 64px;
-        object-fit: cover;
-        border-radius: 12px;
-        border: 2px solid #ced4da;
     }
     .suspension-banner {
         background: #fff5f5;
@@ -47,11 +40,20 @@
         border-radius: 0.75rem 0.75rem 0 0;
     }
 
+    .print-header-arbitro {
+        display: none;
+    }
+
     /* Reglas específicas para impresión del Acta de Arbitraje */
     @media print {
+        @page {
+            size: portrait;
+            margin: 1.2cm 1cm 1.5cm 1cm;
+        }
         body {
             background-color: #ffffff !important;
-            font-size: 11pt;
+            font-size: 10pt;
+            color: #000000 !important;
         }
         .navbar, .footer, .no-print, .breadcrumb, .btn {
             display: none !important;
@@ -62,28 +64,60 @@
             padding: 0 !important;
             margin: 0 !important;
         }
+        .print-header-arbitro {
+            display: block !important;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
         .card {
-            border: 1px solid #000000 !important;
+            border: 1px solid #333333 !important;
             box-shadow: none !important;
             page-break-inside: avoid;
             margin-bottom: 1.5rem !important;
         }
         .team-header-strip {
-            background: #333333 !important;
+            background: #212529 !important;
             color: #ffffff !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            padding: 8px 12px !important;
+        }
+        .team-header-strip h5, .team-header-strip small {
+            color: #ffffff !important;
         }
         .status-badge-suspended {
-            background-color: #000000 !important;
+            background-color: #dc3545 !important;
             color: #ffffff !important;
             font-weight: bold !important;
-            border: 2px solid #000000 !important;
+            border: 1px solid #dc3545 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            animation: none !important;
+        }
+        .status-badge-ok {
+            background-color: #198754 !important;
+            color: #ffffff !important;
+            border: 1px solid #198754 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .table {
+            border-color: #dee2e6 !important;
+            font-size: 9.5pt !important;
+        }
+        .table th, .table td {
+            padding: 6px 8px !important;
+        }
+        .suspension-banner {
+            background: #fdf2f2 !important;
+            border-left: 3px solid #dc3545 !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
         .print-only-signature {
             display: block !important;
+            page-break-inside: avoid;
         }
     }
     .print-only-signature {
@@ -93,7 +127,25 @@
 {% endblock %}
 
 {% block content %}
-<!-- Cabecera de Página -->
+<!-- Membrete Oficial para Impresión -->
+<div class="print-header-arbitro">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h4 class="fw-bold mb-0 text-uppercase">{{ appName|default('Torneo Infantil de Fútbol') }}</h4>
+            <h5 class="fw-bold text-dark mb-1">PLANILLA OFICIAL DE JUEGO Y REVISIÓN DE HABILITACIONES</h5>
+            <div class="small text-muted">
+                <strong>Jornada:</strong> {{ jornada_actual.numero_jornada|default(selected_jornada) }} ({{ jornada_actual.fecha_juego ? jornada_actual.fecha_juego|date('d/m/Y') : 'Fecha pendiente' }}) &mdash; {{ jornada_actual.descripcion|default('Jornada Oficial') }}
+            </div>
+        </div>
+        <div class="col-4 text-end small">
+            <div><strong>Cédula Arbitral Oficial</strong></div>
+            <div>Impresión: {{ "now"|date("d/m/Y H:i") }}</div>
+            <div>Estado de Verificación: <span class="badge bg-dark text-white">Certificado</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabecera de Página en Pantalla -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
     <div>
         <nav aria-label="breadcrumb">
@@ -122,7 +174,7 @@
 <!-- Barra de Filtros interactiva para el Árbitro -->
 <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white no-print">
     <form method="GET" action="{{ url_for('reportes.arbitro') }}" class="row g-3 align-items-end">
-        <!-- Selector de Jornada (Obligatorio para la verificación) -->
+        <!-- Selector de Jornada -->
         <div class="col-md-4">
             <label for="id_jornada" class="form-label fw-bold small text-secondary">
                 <i class="bi bi-calendar-check text-success me-1"></i> Seleccionar Jornada a Jugar:
@@ -188,7 +240,7 @@
                 </span>
             </div>
             <h4 class="fw-bold mb-1 text-dark">{{ jornada_actual.descripcion|default('Jornada Oficial de Liga Infantil') }}</h4>
-            <p class="text-muted small mb-0">
+            <p class="text-muted small mb-0 no-print">
                 <i class="bi bi-info-circle me-1"></i> Las suspensiones mostradas corresponden a sanciones disciplinarias activas para esta fecha de competencia.
             </p>
         </div>
@@ -235,7 +287,7 @@
         </div>
         <h5 class="fw-bold text-dark">No se encontraron jugadores para esta jornada</h5>
         <p class="text-muted small mb-3">Verifique los filtros aplicados o compruebe que existan equipos asociados a los partidos de esta jornada.</p>
-        <div>
+        <div class="no-print">
             <a href="{{ url_for('reportes.arbitro') }}" class="btn btn-outline-success rounded-3">Restablecer filtros</a>
         </div>
     </div>
@@ -312,7 +364,7 @@
                                 <td class="text-center">
                                     {% if j.esta_suspendido %}
                                         <div class="d-inline-flex flex-column align-items-center">
-                                            <span class="badge status-badge-suspended px-3 py-2 rounded-pill fs-7 mb-1">
+                                            <span class="badge status-badge-suspended px-3 py-1.5 rounded-pill fs-7 mb-1">
                                                 <i class="bi bi-x-octagon-fill me-1"></i> SUSPENDIDO
                                             </span>
                                             <div class="suspension-banner small text-danger text-start mt-1" style="max-width: 280px;">
@@ -326,7 +378,7 @@
                                             </div>
                                         </div>
                                     {% else %}
-                                        <span class="badge status-badge-ok px-3 py-2 rounded-pill fs-7">
+                                        <span class="badge status-badge-ok px-3 py-1.5 rounded-pill fs-7">
                                             <i class="bi bi-check-circle-fill text-success me-1"></i> HABILITADO
                                         </span>
                                     {% endif %}
@@ -349,24 +401,24 @@
 
 <!-- Pie de firmas oficial para cuando se imprime el Acta -->
 <div class="print-only-signature mt-5 pt-4">
-    <div class="row text-center mt-5">
+    <div class="row text-center mt-4">
         <div class="col-4">
             <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
                 Firma Árbitro Principal
             </div>
-            <small>Nombre y Cédula Arbitral</small>
+            <small>Cédula Arbitral / Colegio de Árbitros</small>
         </div>
         <div class="col-4">
             <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
-                Firma Capitán / Delegado Local
+                Firma Delegado Local
             </div>
-            <small>Representante Club Local</small>
+            <small>Conformidad Nómina Club Local</small>
         </div>
         <div class="col-4">
             <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
-                Firma Capitán / Delegado Visita
+                Firma Delegado Visitante
             </div>
-            <small>Representante Club Visitante</small>
+            <small>Conformidad Nómina Club Visitante</small>
         </div>
     </div>
 </div>

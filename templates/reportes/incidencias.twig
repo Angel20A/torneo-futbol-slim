@@ -31,22 +31,97 @@
         vertical-align: middle;
         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
+
+    .print-header-incidencias {
+        display: none;
+    }
+    .print-only-signature {
+        display: none;
+    }
+
+    /* Reglas para Impresión Oficial */
     @media print {
-        .navbar, .footer, .no-print, .btn, .breadcrumb {
-            display: none !important;
+        @page {
+            size: portrait;
+            margin: 1.2cm 1cm 1.5cm 1cm;
         }
         body {
             background-color: #ffffff !important;
+            font-size: 10pt;
+            color: #000000 !important;
+        }
+        .navbar, .footer, .no-print, .btn, .breadcrumb {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .print-header-incidencias {
+            display: block !important;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
         .card {
-            border: 1px solid #000 !important;
+            border: 1px solid #333333 !important;
             box-shadow: none !important;
+            page-break-inside: avoid;
+        }
+        .table {
+            border-color: #dee2e6 !important;
+            font-size: 9.5pt !important;
+        }
+        .table th, .table td {
+            padding: 6px 8px !important;
+        }
+        .card-tarjeta-amarilla {
+            background-color: #ffc107 !important;
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .card-tarjeta-roja {
+            background-color: #dc3545 !important;
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .badge {
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .print-only-signature {
+            display: block !important;
+            page-break-inside: avoid;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Membrete Oficial para Impresión -->
+<div class="print-header-incidencias">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h4 class="fw-bold mb-0 text-uppercase">{{ appName|default('Torneo Infantil de Fútbol') }}</h4>
+            <h5 class="fw-bold text-dark mb-1">INFORME DISCIPLINARIO DE FALTAS Y SANCIONES</h5>
+            <div class="small text-muted">
+                Registro oficial del Tribunal de Disciplina y Amonestaciones Arbitrales.
+            </div>
+        </div>
+        <div class="col-4 text-end small">
+            <div><strong>Tribunal de Disciplina</strong></div>
+            <div>Fecha de Emisión: {{ "now"|date("d/m/Y H:i") }}</div>
+            <div>Total Registros: {{ incidencias|length }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabecera de Página en Pantalla -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
     <div>
         <nav aria-label="breadcrumb">
@@ -75,7 +150,7 @@
 <!-- Filtros Dinámicos: Equipo, Jugador y Tipo de Tarjeta -->
 <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white no-print">
     <form method="GET" action="{{ url_for('reportes.incidencias') }}" class="row g-3 align-items-end">
-        <!-- Selector de Equipo (uno o todos) -->
+        <!-- Selector de Equipo -->
         <div class="col-md-4">
             <label for="id_equipo" class="form-label fw-bold small text-secondary">
                 <i class="bi bi-shield text-success me-1"></i> Equipo:
@@ -90,7 +165,7 @@
             </select>
         </div>
 
-        <!-- Selector de Jugador (uno o todos) -->
+        <!-- Selector de Jugador -->
         <div class="col-md-4">
             <label for="id_jugador" class="form-label fw-bold small text-secondary">
                 <i class="bi bi-person text-primary me-1"></i> Jugador:
@@ -182,7 +257,7 @@
 </div>
 
 <!-- Tabla de Incidencias Registradas -->
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
     <div class="p-3 px-4 border-bottom bg-light d-flex justify-content-between align-items-center">
         <h5 class="fw-bold mb-0 text-dark">
             <i class="bi bi-list-check me-2"></i>Historial Detallado de Faltas y Amonestaciones
@@ -303,5 +378,23 @@
             </table>
         </div>
     {% endif %}
+</div>
+
+<!-- Pie de Firmas Oficial para Impresión -->
+<div class="print-only-signature mt-5 pt-4">
+    <div class="row text-center mt-4">
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Presidente del Tribunal de Disciplina
+            </div>
+            <small>Comisión de Penas y Sanciones</small>
+        </div>
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Secretario General de Actas
+            </div>
+            <small>Certificación y Registro Oficial</small>
+        </div>
+    </div>
 </div>
 {% endblock %}

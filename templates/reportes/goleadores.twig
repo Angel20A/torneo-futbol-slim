@@ -76,33 +76,91 @@
     .rank-3 { background: linear-gradient(135deg, #e69138, #b45f06); }
 
     .player-table-avatar {
-        width: 48px;
-        height: 48px;
+        width: 46px;
+        height: 46px;
         object-fit: cover;
         border-radius: 50%;
         border: 2px solid #dee2e6;
     }
-    .gold-number {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: #0f5132;
+
+    .print-header-goleadores {
+        display: none;
     }
+    .print-only-signature {
+        display: none;
+    }
+
+    /* Reglas para Impresión Oficial */
     @media print {
-        .navbar, .footer, .no-print, .btn, .breadcrumb {
-            display: none !important;
+        @page {
+            size: portrait;
+            margin: 1.2cm 1cm 1.5cm 1cm;
         }
         body {
             background-color: #ffffff !important;
+            font-size: 10pt;
+            color: #000000 !important;
+        }
+        .navbar, .footer, .no-print, .btn, .breadcrumb, .podium-container {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .print-header-goleadores {
+            display: block !important;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
         .card {
-            border: 1px solid #000 !important;
+            border: 1px solid #333333 !important;
             box-shadow: none !important;
+            page-break-inside: avoid;
+        }
+        .table {
+            border-color: #dee2e6 !important;
+            font-size: 9.5pt !important;
+        }
+        .table th, .table td {
+            padding: 6px 8px !important;
+        }
+        .badge {
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .print-only-signature {
+            display: block !important;
+            page-break-inside: avoid;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Membrete Oficial para Impresión -->
+<div class="print-header-goleadores">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h4 class="fw-bold mb-0 text-uppercase">{{ appName|default('Torneo Infantil de Fútbol') }}</h4>
+            <h5 class="fw-bold text-dark mb-1">TABLA OFICIAL DE GOLEO INDIVIDUAL (PICHICHI)</h5>
+            <div class="small text-muted">
+                Clasificación totalizada en orden estrictamente descendente &mdash; Temporada Oficial 2026.
+            </div>
+        </div>
+        <div class="col-4 text-end small">
+            <div><strong>Comisión Técnica de Estadísticas</strong></div>
+            <div>Fecha de Emisión: {{ "now"|date("d/m/Y H:i") }}</div>
+            <div>Total Goles Registrados: {{ total_goles_listado }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabecera de Página en Pantalla -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
     <div>
         <nav aria-label="breadcrumb">
@@ -158,7 +216,7 @@
     </form>
 </div>
 
-<!-- Podio Destacado de Líderes (Top 3) -->
+<!-- Podio Destacado de Líderes (Top 3 en pantalla) -->
 {% if top3 is not empty %}
 <div class="row justify-content-center mb-4 no-print">
     <div class="col-12 col-xl-10">
@@ -243,13 +301,13 @@
 {% endif %}
 
 <!-- Tabla General Ordenada de Mayor a Menor -->
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
     <div class="p-3 px-4 border-bottom bg-light d-flex justify-content-between align-items-center">
         <h5 class="fw-bold mb-0 text-dark">
             <i class="bi bi-list-ol me-2"></i>Clasificación General de Goleo Individual
         </h5>
         <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold">
-            Ordenado de Mayor a Menor
+            Orden Descendente
         </span>
     </div>
 
@@ -295,7 +353,7 @@
                                 {% endif %}
                             </td>
 
-                            <!-- Fotografía del Jugador (Requisito 4.c.ii) -->
+                            <!-- Fotografía del Jugador -->
                             <td>
                                 {% if g.jugador_foto %}
                                     <img src="{{ g.jugador_foto }}" alt="{{ g.nombres }}" class="player-table-avatar shadow-sm" onerror="this.onerror=null;this.src='/uploads/jugadores/default.png';">
@@ -306,7 +364,7 @@
                                 {% endif %}
                             </td>
 
-                            <!-- Nombre del Jugador (Requisito 4.c.ii) -->
+                            <!-- Nombre del Jugador -->
                             <td>
                                 <a href="/reportes/jugadores/{{ g.id_jugador }}" class="fw-bold text-dark text-decoration-none fs-6 d-block">
                                     {{ g.nombres }} {{ g.apellidos }}
@@ -314,7 +372,7 @@
                                 <small class="text-muted"><i class="bi bi-cake2 me-1"></i>{{ g.edad }} años | ID: #{{ g.id_jugador }}</small>
                             </td>
 
-                            <!-- Nombre del Equipo (Requisito 4.c.ii) -->
+                            <!-- Nombre del Equipo -->
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     {% if g.equipo_foto %}
@@ -331,7 +389,7 @@
                                 </span>
                             </td>
 
-                            <!-- Total de Goles (Requisito 4.c.i) -->
+                            <!-- Total de Goles -->
                             <td class="text-center">
                                 <span class="badge {{ g.posicion == 1 ? 'bg-success' : 'bg-success-subtle text-success border border-success-subtle' }} px-3 py-2 rounded-pill fs-6 fw-bold shadow-sm">
                                     <i class="bi bi-dribbble me-1"></i> {{ g.total_goles }} {{ g.total_goles == 1 ? 'gol' : 'goles' }}
@@ -350,5 +408,23 @@
             </table>
         </div>
     {% endif %}
+</div>
+
+<!-- Pie de Certificación Oficial para Impresión -->
+<div class="print-only-signature mt-5 pt-4">
+    <div class="row text-center mt-4">
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Director de Estadísticas y Competición
+            </div>
+            <small>Comisión Técnica de Torneo</small>
+        </div>
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Fiscal General del Torneo
+            </div>
+            <small>Revisión y Homologación de Resultados</small>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -10,8 +10,8 @@
         border: 1px solid rgba(0,0,0,0.06);
     }
     .profile-photo-hero {
-        width: 160px;
-        height: 160px;
+        width: 150px;
+        height: 150px;
         object-fit: cover;
         border-radius: 1.25rem;
         border: 4px solid #ffffff;
@@ -54,22 +54,127 @@
         border-color: #198754;
         background: transparent;
     }
+
+    .print-header-jugador {
+        display: none;
+    }
+    .print-section-title {
+        display: none;
+    }
+    .print-only-signature {
+        display: none;
+    }
+
+    /* Reglas para Impresión Oficial */
     @media print {
-        .navbar, .footer, .no-print, .btn, .breadcrumb {
-            display: none !important;
+        @page {
+            size: portrait;
+            margin: 1.2cm 1cm 1.5cm 1cm;
         }
         body {
             background-color: #ffffff !important;
+            font-size: 10pt;
+            color: #000000 !important;
+        }
+        .navbar, .footer, .no-print, .btn, .breadcrumb, .nav-tabs {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .print-header-jugador {
+            display: block !important;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
         .player-profile-card {
-            border: 1px solid #000 !important;
+            border: 1px solid #333333 !important;
             box-shadow: none !important;
+            page-break-inside: avoid;
+            margin-bottom: 1rem !important;
+        }
+        .kpi-box {
+            border: 1px solid #ced4da !important;
+            box-shadow: none !important;
+        }
+        .tab-content > .tab-pane {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            margin-bottom: 1.5rem !important;
+            page-break-inside: avoid;
+        }
+        .print-section-title {
+            display: block !important;
+            font-weight: bold;
+            font-size: 11pt;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        .table {
+            border-color: #dee2e6 !important;
+            font-size: 9.5pt !important;
+        }
+        .table th, .table td {
+            padding: 5px 8px !important;
+        }
+        .badge {
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .status-pill-ok {
+            background-color: #d1e7dd !important;
+            color: #0f5132 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .status-pill-danger {
+            background-color: #f8d7da !important;
+            color: #842029 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .profile-photo-hero {
+            border: 2px solid #333333 !important;
+            box-shadow: none !important;
+            width: 120px !important;
+            height: 120px !important;
+        }
+        .print-only-signature {
+            display: block !important;
+            page-break-inside: avoid;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- Membrete Oficial para Impresión -->
+<div class="print-header-jugador">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h4 class="fw-bold mb-0 text-uppercase">{{ appName|default('Torneo Infantil de Fútbol') }}</h4>
+            <h5 class="fw-bold text-dark mb-1">EXPEDIENTE Y FICHA TÉCNICA INDIVIDUAL DEL JUGADOR</h5>
+            <div class="small text-muted">
+                Registro oficial de habilitación deportiva, rendimiento individual y sanciones disciplinarias.
+            </div>
+        </div>
+        <div class="col-4 text-end small">
+            <div><strong>Cédula Oficial del Jugador</strong></div>
+            <div>Fecha de Emisión: {{ "now"|date("d/m/Y H:i") }}</div>
+            <div>Temporada 2026</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabecera de Página en Pantalla -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
     <div>
         <nav aria-label="breadcrumb">
@@ -144,7 +249,7 @@
 {% else %}
     {% set jug = detalle.jugador %}
 
-    <!-- Ficha Principal de Identidad del Jugador (Requisito 4.d.i) -->
+    <!-- Ficha Principal de Identidad del Jugador -->
     <div class="card player-profile-card shadow-sm rounded-4 mb-4 p-4">
         <div class="row align-items-center g-4">
             <!-- Fotografía Destacada -->
@@ -272,7 +377,7 @@
         </div>
     </div>
 
-    <!-- Pestañas de Historial de Goles e Incidencias -->
+    <!-- Pestañas de Historial de Goles e Incidencias (y ambas visibles al imprimir) -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
         <ul class="nav nav-tabs px-3 pt-2 bg-light border-bottom" id="jugadorTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -290,10 +395,13 @@
         <div class="tab-content" id="jugadorTabsContent">
             <!-- Panel 1: Historial de Goles -->
             <div class="tab-pane fade show active p-0" id="goles-pane" role="tabpanel" aria-labelledby="goles-tab">
+                <div class="print-section-title px-4 pt-3">
+                    <i class="bi bi-dribbble me-1"></i> Registro de Goles Anotados
+                </div>
                 {% if detalle.historial_goles is empty %}
-                    <div class="p-5 text-center text-muted">
-                        <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
-                        <h6 class="fw-bold text-dark">No registra goles anotados</h6>
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-info-circle fs-3 d-block mb-1"></i>
+                        <h6 class="fw-bold text-dark mb-1">No registra goles anotados</h6>
                         <p class="small mb-0">El jugador aún no tiene goles asentados en las actas de partido.</p>
                     </div>
                 {% else %}
@@ -343,10 +451,13 @@
 
             <!-- Panel 2: Historial Disciplinario -->
             <div class="tab-pane fade p-0" id="incidencias-pane" role="tabpanel" aria-labelledby="incidencias-tab">
+                <div class="print-section-title px-4 pt-3">
+                    <i class="bi bi-shield-exclamation me-1"></i> Registro Disciplinario y Amonestaciones
+                </div>
                 {% if detalle.historial_incidencias is empty %}
-                    <div class="p-5 text-center text-muted">
-                        <i class="bi bi-emoji-smile fs-2 text-success d-block mb-2"></i>
-                        <h6 class="fw-bold text-dark">Historial Disciplinario Limpio</h6>
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-emoji-smile fs-3 text-success d-block mb-1"></i>
+                        <h6 class="fw-bold text-dark mb-1">Historial Disciplinario Limpio</h6>
                         <p class="small mb-0">Este jugador no registra ninguna tarjeta amarilla ni expulsión en el torneo.</p>
                     </div>
                 {% else %}
@@ -402,6 +513,24 @@
                         </table>
                     </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie de Firma Oficial para Impresión -->
+    <div class="print-only-signature mt-5 pt-4">
+        <div class="row text-center mt-4">
+            <div class="col-6">
+                <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                    Delegado / Representante de Club
+                </div>
+                <small>{{ jug.equipo_nombre }}</small>
+            </div>
+            <div class="col-6">
+                <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                    Oficina de Registro y Fichaje
+                </div>
+                <small>Comisión de Categorías Infantiles</small>
             </div>
         </div>
     </div>
