@@ -13,6 +13,7 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use App\Controllers\PartidoController;
 use App\Controllers\JornadaController;
+use App\Controllers\ReporteController;
 
 return function (App $app): void {
     // Ruta Principal / Dashboard
@@ -79,6 +80,9 @@ return function (App $app): void {
         $group->post('/{id:[0-9]+}/eliminar', [GolController::class, 'delete'])->setName('goles.delete');
     });
 
+    // ==========================================
+    // Módulo de Incidencias (CRUD)
+    // ==========================================
     $app->group('/incidencias', function (RouteCollectorProxy $group): void {
         $group->get('', [IncidenciaController::class, 'index'])->setName('incidencias.index');
         $group->get('/nueva', [IncidenciaController::class, 'create'])->setName('incidencias.create');
@@ -92,7 +96,15 @@ return function (App $app): void {
             ->setName('incidencias.delete');
     })->add(new IncidenciaCsrfMiddleware($app->getContainer()->get(IncidenciaCsrf::class)));
 
+    // ==========================================
+    // Módulo de Reportes e Informes
+    // ==========================================
     $app->group('/reportes', function (RouteCollectorProxy $group): void {
-        // Rutas futuras para tablas y estadísticas
+        $group->get('', [ReporteController::class, 'index'])->setName('reportes.index');
+        $group->get('/arbitro', [ReporteController::class, 'arbitro'])->setName('reportes.arbitro');
+        $group->get('/incidencias', [ReporteController::class, 'incidencias'])->setName('reportes.incidencias');
+        $group->get('/goleadores', [ReporteController::class, 'goleadores'])->setName('reportes.goleadores');
+        $group->get('/jugadores', [ReporteController::class, 'jugador'])->setName('reportes.jugador');
+        $group->get('/jugadores/{id:[0-9]+}', [ReporteController::class, 'jugadorDetalle'])->setName('reportes.jugador.detalle');
     });
 };

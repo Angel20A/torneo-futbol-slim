@@ -1,0 +1,430 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ title }} | {{ appName }}{% endblock %}
+
+{% block styles %}
+<style>
+    .podium-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 1.25rem;
+        margin-bottom: 2.5rem;
+        padding-top: 1.5rem;
+    }
+    .podium-card {
+        background: #ffffff;
+        border-radius: 1.25rem;
+        text-align: center;
+        padding: 1.5rem 1rem;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        position: relative;
+        transition: transform 0.25s ease;
+    }
+    .podium-card:hover {
+        transform: translateY(-6px);
+    }
+    .podium-1 {
+        order: 2;
+        width: 34%;
+        border-top: 5px solid #ffc107;
+        background: linear-gradient(180deg, #fffdf0 0%, #ffffff 100%);
+        box-shadow: 0 12px 30px rgba(255, 193, 7, 0.2);
+    }
+    .podium-2 {
+        order: 1;
+        width: 30%;
+        border-top: 5px solid #adb5bd;
+    }
+    .podium-3 {
+        order: 3;
+        width: 30%;
+        border-top: 5px solid #cd7f32;
+    }
+    .podium-avatar {
+        width: 82px;
+        height: 82px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin-bottom: 0.75rem;
+        border: 3px solid #ffffff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .podium-avatar-leader {
+        width: 98px;
+        height: 98px;
+        border: 4px solid #ffc107;
+    }
+    .badge-rank {
+        position: absolute;
+        top: -16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #ffffff;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+    .rank-1 { background: linear-gradient(135deg, #ffd700, #ffaa00); }
+    .rank-2 { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); }
+    .rank-3 { background: linear-gradient(135deg, #e69138, #b45f06); }
+
+    .player-table-avatar {
+        width: 46px;
+        height: 46px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+    }
+
+    .print-header-goleadores {
+        display: none;
+    }
+    .print-only-signature {
+        display: none;
+    }
+
+    /* Reglas para Impresión Oficial */
+    @media print {
+        @page {
+            size: portrait;
+            margin: 1.2cm 1cm 1.5cm 1cm;
+        }
+        body {
+            background-color: #ffffff !important;
+            font-size: 10pt;
+            color: #000000 !important;
+        }
+        .navbar, .footer, .no-print, .btn, .breadcrumb, .podium-container {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .print-header-goleadores {
+            display: block !important;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .card {
+            border: 1px solid #333333 !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+        }
+        .table {
+            border-color: #dee2e6 !important;
+            font-size: 9.5pt !important;
+        }
+        .table th, .table td {
+            padding: 6px 8px !important;
+        }
+        .badge {
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .print-only-signature {
+            display: block !important;
+            page-break-inside: avoid;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Membrete Oficial para Impresión -->
+<div class="print-header-goleadores">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h4 class="fw-bold mb-0 text-uppercase">{{ appName|default('Torneo Infantil de Fútbol') }}</h4>
+            <h5 class="fw-bold text-dark mb-1">TABLA OFICIAL DE GOLEO INDIVIDUAL (PICHICHI)</h5>
+            <div class="small text-muted">
+                Clasificación totalizada en orden estrictamente descendente &mdash; Temporada Oficial 2026.
+            </div>
+        </div>
+        <div class="col-4 text-end small">
+            <div><strong>Comisión Técnica de Estadísticas</strong></div>
+            <div>Fecha de Emisión: {{ "now"|date("d/m/Y H:i") }}</div>
+            <div>Total Goles Registrados: {{ total_goles_listado }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabecera de Página en Pantalla -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('reportes.index') }}" class="text-decoration-none text-muted">Reportes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Tabla de Goleadores</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-trophy-fill text-warning me-2"></i>Tabla Oficial de Goleadores (Pichichi)
+        </h2>
+        <p class="text-muted small mb-0">Totalización acumulada de goles por jugador, clasificados en orden estrictamente descendente.</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" onclick="window.print()" class="btn btn-outline-dark shadow-sm rounded-3 fw-medium">
+            <i class="bi bi-printer me-1"></i> Imprimir Tabla
+        </button>
+        <a href="{{ url_for('reportes.index') }}" class="btn btn-light border shadow-sm rounded-3">
+            <i class="bi bi-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- Filtro Opcional por Club -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white no-print">
+    <form method="GET" action="{{ url_for('reportes.goleadores') }}" class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label for="id_equipo" class="form-label fw-bold small text-secondary">
+                <i class="bi bi-shield text-success me-1"></i> Filtrar Goleadores por Club:
+            </label>
+            <select name="id_equipo" id="id_equipo" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="this.form.submit()">
+                <option value="">-- Todos los Clubes Participantes --</option>
+                {% for eq in equipos %}
+                    <option value="{{ eq.id_equipo }}" {{ eq.id_equipo == selected_equipo ? 'selected' : '' }}>
+                        {{ eq.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-7 d-flex justify-content-md-end align-items-center gap-3">
+            <div class="text-md-end">
+                <span class="text-muted small text-uppercase fw-semibold d-block">Goles Totales Evaluados</span>
+                <span class="h5 fw-bold text-success mb-0">{{ total_goles_listado }} anotaciones</span>
+            </div>
+            {% if selected_equipo %}
+                <a href="{{ url_for('reportes.goleadores') }}" class="btn btn-outline-secondary rounded-3 btn-sm">
+                    Quitar Filtro
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Podio Destacado de Líderes (Top 3 en pantalla) -->
+{% if top3 is not empty %}
+<div class="row justify-content-center mb-4 no-print">
+    <div class="col-12 col-xl-10">
+        <div class="podium-container flex-column flex-sm-row">
+            <!-- 2do Lugar (Plata) -->
+            {% if top3[1] is defined %}
+            <div class="podium-card podium-2 w-100 w-sm-30">
+                <div class="badge-rank rank-2">2</div>
+                {% if top3[1].jugador_foto %}
+                    <img src="{{ top3[1].jugador_foto }}" alt="{{ top3[1].nombres }}" class="podium-avatar" onerror="this.onerror=null;this.src='/uploads/jugadores/default.png';">
+                {% else %}
+                    <div class="podium-avatar bg-light text-muted d-flex align-items-center justify-content-center mx-auto fs-3">
+                        <i class="bi bi-person"></i>
+                    </div>
+                {% endif %}
+                <h6 class="fw-bold text-dark mb-0 text-truncate">{{ top3[1].nombres }} {{ top3[1].apellidos }}</h6>
+                <div class="small text-muted mb-2 text-truncate">{{ top3[1].equipo_nombre }}</div>
+                <div class="badge bg-secondary-subtle text-secondary fs-6 px-3 py-1 rounded-pill fw-bold">
+                    {{ top3[1].total_goles }} {{ top3[1].total_goles == 1 ? 'Gol' : 'Goles' }}
+                </div>
+                <div class="mt-2">
+                    <a href="/reportes/jugadores/{{ top3[1].id_jugador }}" class="small text-decoration-none text-muted">
+                        Ver ficha <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 1er Lugar (Oro / Pichichi) -->
+            {% if top3[0] is defined %}
+            <div class="podium-card podium-1 w-100 w-sm-35">
+                <div class="badge-rank rank-1"><i class="bi bi-trophy-fill text-dark fs-6"></i></div>
+                {% if top3[0].jugador_foto %}
+                    <img src="{{ top3[0].jugador_foto }}" alt="{{ top3[0].nombres }}" class="podium-avatar podium-avatar-leader" onerror="this.onerror=null;this.src='/uploads/jugadores/default.png';">
+                {% else %}
+                    <div class="podium-avatar podium-avatar-leader bg-warning-subtle text-warning d-flex align-items-center justify-content-center mx-auto fs-2">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                {% endif %}
+                <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill small fw-bold mb-1">
+                    <i class="bi bi-star-fill text-danger me-1"></i> Líder Goleador
+                </span>
+                <h5 class="fw-bold text-dark mb-0 text-truncate">{{ top3[0].nombres }} {{ top3[0].apellidos }}</h5>
+                <div class="text-muted small mb-2 text-truncate fw-medium">{{ top3[0].equipo_nombre }}</div>
+                <div class="badge bg-success text-white fs-5 px-3.5 py-1.5 rounded-pill shadow-sm fw-bold">
+                    {{ top3[0].total_goles }} {{ top3[0].total_goles == 1 ? 'Gol' : 'Goles' }}
+                </div>
+                <div class="mt-2">
+                    <a href="/reportes/jugadores/{{ top3[0].id_jugador }}" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 mt-1">
+                        Ver Expediente
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 3er Lugar (Bronce) -->
+            {% if top3[2] is defined %}
+            <div class="podium-card podium-3 w-100 w-sm-30">
+                <div class="badge-rank rank-3">3</div>
+                {% if top3[2].jugador_foto %}
+                    <img src="{{ top3[2].jugador_foto }}" alt="{{ top3[2].nombres }}" class="podium-avatar" onerror="this.onerror=null;this.src='/uploads/jugadores/default.png';">
+                {% else %}
+                    <div class="podium-avatar bg-light text-muted d-flex align-items-center justify-content-center mx-auto fs-3">
+                        <i class="bi bi-person"></i>
+                    </div>
+                {% endif %}
+                <h6 class="fw-bold text-dark mb-0 text-truncate">{{ top3[2].nombres }} {{ top3[2].apellidos }}</h6>
+                <div class="small text-muted mb-2 text-truncate">{{ top3[2].equipo_nombre }}</div>
+                <div class="badge bg-secondary-subtle text-secondary fs-6 px-3 py-1 rounded-pill fw-bold">
+                    {{ top3[2].total_goles }} {{ top3[2].total_goles == 1 ? 'Gol' : 'Goles' }}
+                </div>
+                <div class="mt-2">
+                    <a href="/reportes/jugadores/{{ top3[2].id_jugador }}" class="small text-decoration-none text-muted">
+                        Ver ficha <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabla General Ordenada de Mayor a Menor -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+    <div class="p-3 px-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-list-ol me-2"></i>Clasificación General de Goleo Individual
+        </h5>
+        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold">
+            Orden Descendente
+        </span>
+    </div>
+
+    {% if goleadores is empty %}
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-dribbble fs-1 text-warning mb-2 d-block"></i>
+            <h5 class="fw-bold text-dark">No se registran goles con los filtros seleccionados</h5>
+            <p class="small mb-0">Aún no se han asentado anotaciones para los jugadores o equipo consultado.</p>
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-secondary small text-uppercase fw-semibold">
+                    <tr>
+                        <th class="text-center ps-4" style="width: 70px;">Pos</th>
+                        <th style="width: 70px;">Foto</th>
+                        <th>Nombre del Jugador</th>
+                        <th>Nombre del Equipo</th>
+                        <th class="text-center" style="width: 140px;">Partidos con Gol</th>
+                        <th class="text-center" style="width: 150px;">Total Goles</th>
+                        <th class="text-center no-print" style="width: 120px;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for g in goleadores %}
+                        <tr class="{{ g.posicion == 1 ? 'table-warning-subtle' : '' }}">
+                            <!-- Posición en el ranking -->
+                            <td class="text-center ps-4">
+                                {% if g.posicion == 1 %}
+                                    <span class="badge bg-warning text-dark rounded-circle p-2 fs-6 shadow-sm" title="Primer Lugar">
+                                        🥇
+                                    </span>
+                                {% elseif g.posicion == 2 %}
+                                    <span class="badge bg-secondary text-white rounded-circle p-2 fs-6 shadow-sm" title="Segundo Lugar">
+                                        🥈
+                                    </span>
+                                {% elseif g.posicion == 3 %}
+                                    <span class="badge bg-dark-subtle text-dark rounded-circle p-2 fs-6 shadow-sm" title="Tercer Lugar">
+                                        🥉
+                                    </span>
+                                {% else %}
+                                    <span class="fw-bold text-muted fs-6">#{{ g.posicion }}</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Fotografía del Jugador -->
+                            <td>
+                                {% if g.jugador_foto %}
+                                    <img src="{{ g.jugador_foto }}" alt="{{ g.nombres }}" class="player-table-avatar shadow-sm" onerror="this.onerror=null;this.src='/uploads/jugadores/default.png';">
+                                {% else %}
+                                    <div class="player-table-avatar bg-light text-muted d-flex align-items-center justify-content-center fw-bold">
+                                        {{ g.nombres|slice(0, 1) }}
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            <!-- Nombre del Jugador -->
+                            <td>
+                                <a href="/reportes/jugadores/{{ g.id_jugador }}" class="fw-bold text-dark text-decoration-none fs-6 d-block">
+                                    {{ g.nombres }} {{ g.apellidos }}
+                                </a>
+                                <small class="text-muted"><i class="bi bi-cake2 me-1"></i>{{ g.edad }} años | ID: #{{ g.id_jugador }}</small>
+                            </td>
+
+                            <!-- Nombre del Equipo -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if g.equipo_foto %}
+                                        <img src="{{ g.equipo_foto }}" alt="{{ g.equipo_nombre }}" class="team-logo-sm rounded-circle" onerror="this.style.display='none'">
+                                    {% endif %}
+                                    <span class="fw-semibold text-dark">{{ g.equipo_nombre }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Partidos con Gol -->
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border px-2.5 py-1">
+                                    <i class="bi bi-calendar-check me-1 text-primary"></i> {{ g.partidos_con_gol }} partido(s)
+                                </span>
+                            </td>
+
+                            <!-- Total de Goles -->
+                            <td class="text-center">
+                                <span class="badge {{ g.posicion == 1 ? 'bg-success' : 'bg-success-subtle text-success border border-success-subtle' }} px-3 py-2 rounded-pill fs-6 fw-bold shadow-sm">
+                                    <i class="bi bi-dribbble me-1"></i> {{ g.total_goles }} {{ g.total_goles == 1 ? 'gol' : 'goles' }}
+                                </span>
+                            </td>
+
+                            <!-- Acción: Consulta en pantalla -->
+                            <td class="text-center no-print">
+                                <a href="/reportes/jugadores/{{ g.id_jugador }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1" title="Ver Perfil">
+                                    <i class="bi bi-person-lines-fill"></i> Perfil
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pie de Certificación Oficial para Impresión -->
+<div class="print-only-signature mt-5 pt-4">
+    <div class="row text-center mt-4">
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Director de Estadísticas y Competición
+            </div>
+            <small>Comisión Técnica de Torneo</small>
+        </div>
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Fiscal General del Torneo
+            </div>
+            <small>Revisión y Homologación de Resultados</small>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,19 +2,21 @@
 
 declare(strict_types=1);
 
+use App\Controllers\ReporteController;
 use App\Repositories\EquipoRepository;
 use App\Repositories\GolRepository;
+use App\Repositories\IncidenciaRepository;
+use App\Repositories\JornadaRepository;
 use App\Repositories\JugadorRepository;
+use App\Repositories\PartidoRepository;
+use App\Repositories\ReporteRepository;
 use App\Services\UploadService;
 use App\Support\Flash;
-use DI\ContainerBuilder;
-use App\Repositories\IncidenciaRepository;
 use App\Support\IncidenciaCsrf;
 use App\Validation\IncidenciaValidator;
+use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
-use App\Repositories\JornadaRepository;
-use App\Repositories\PartidoRepository;
 
 $containerBuilder = new ContainerBuilder();
 
@@ -73,6 +75,18 @@ $containerBuilder->addDefinitions([
   
     GolRepository::class => function (ContainerInterface $c): GolRepository {
         return new GolRepository($c->get(PDO::class));
+    },
+
+    ReporteRepository::class => function (ContainerInterface $c): ReporteRepository {
+        return new ReporteRepository($c->get(PDO::class));
+    },
+
+    ReporteController::class => function (ContainerInterface $c): ReporteController {
+        return new ReporteController(
+            $c->get(Twig::class),
+            $c->get(ReporteRepository::class),
+            $c->get(Flash::class)
+        );
     },
 
     // Motor de plantillas Twig

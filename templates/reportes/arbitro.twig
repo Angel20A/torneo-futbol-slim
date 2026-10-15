@@ -1,0 +1,425 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ title }} | {{ appName }}{% endblock %}
+
+{% block styles %}
+<style>
+    .player-photo {
+        width: 52px;
+        height: 52px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+    }
+    .suspension-banner {
+        background: #fff5f5;
+        border-left: 4px solid #dc3545;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0 0.5rem 0.5rem 0;
+    }
+    .status-badge-ok {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        font-weight: 600;
+        border: 1px solid #badbcc;
+    }
+    .status-badge-suspended {
+        background-color: #f8d7da;
+        color: #842029;
+        font-weight: 700;
+        border: 1px solid #f5c2c7;
+        animation: pulseWarning 2s infinite ease-in-out;
+    }
+    @keyframes pulseWarning {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.75; }
+    }
+    .team-header-strip {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #ffffff;
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+
+    .print-header-arbitro {
+        display: none;
+    }
+
+    /* Reglas específicas para impresión del Acta de Arbitraje */
+    @media print {
+        @page {
+            size: portrait;
+            margin: 1.2cm 1cm 1.5cm 1cm;
+        }
+        body {
+            background-color: #ffffff !important;
+            font-size: 10pt;
+            color: #000000 !important;
+        }
+        .navbar, .footer, .no-print, .breadcrumb, .btn {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .print-header-arbitro {
+            display: block !important;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .card {
+            border: 1px solid #333333 !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+            margin-bottom: 1.5rem !important;
+        }
+        .team-header-strip {
+            background: #212529 !important;
+            color: #ffffff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            padding: 8px 12px !important;
+        }
+        .team-header-strip h5, .team-header-strip small {
+            color: #ffffff !important;
+        }
+        .status-badge-suspended {
+            background-color: #dc3545 !important;
+            color: #ffffff !important;
+            font-weight: bold !important;
+            border: 1px solid #dc3545 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            animation: none !important;
+        }
+        .status-badge-ok {
+            background-color: #198754 !important;
+            color: #ffffff !important;
+            border: 1px solid #198754 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .table {
+            border-color: #dee2e6 !important;
+            font-size: 9.5pt !important;
+        }
+        .table th, .table td {
+            padding: 6px 8px !important;
+        }
+        .suspension-banner {
+            background: #fdf2f2 !important;
+            border-left: 3px solid #dc3545 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .print-only-signature {
+            display: block !important;
+            page-break-inside: avoid;
+        }
+    }
+    .print-only-signature {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Membrete Oficial para Impresión -->
+<div class="print-header-arbitro">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h4 class="fw-bold mb-0 text-uppercase">{{ appName|default('Torneo Infantil de Fútbol') }}</h4>
+            <h5 class="fw-bold text-dark mb-1">PLANILLA OFICIAL DE JUEGO Y REVISIÓN DE HABILITACIONES</h5>
+            <div class="small text-muted">
+                <strong>Jornada:</strong> {{ jornada_actual.numero_jornada|default(selected_jornada) }} ({{ jornada_actual.fecha_juego ? jornada_actual.fecha_juego|date('d/m/Y') : 'Fecha pendiente' }}) &mdash; {{ jornada_actual.descripcion|default('Jornada Oficial') }}
+            </div>
+        </div>
+        <div class="col-4 text-end small">
+            <div><strong>Cédula Arbitral Oficial</strong></div>
+            <div>Impresión: {{ "now"|date("d/m/Y H:i") }}</div>
+            <div>Estado de Verificación: <span class="badge bg-dark text-white">Certificado</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabecera de Página en Pantalla -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('reportes.index') }}" class="text-decoration-none text-muted">Reportes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Nómina para Árbitro</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-person-badge-fill text-success me-2"></i>Nómina Oficial para el Árbitro
+        </h2>
+        <p class="text-muted small mb-0">Cédula de equipos y verificación de suspensión de jugadores para la fecha oficial.</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" onclick="window.print()" class="btn btn-outline-dark shadow-sm rounded-3 fw-medium">
+            <i class="bi bi-printer me-1"></i> Imprimir Acta
+        </button>
+        <a href="{{ url_for('reportes.index') }}" class="btn btn-light border shadow-sm rounded-3">
+            <i class="bi bi-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- Barra de Filtros interactiva para el Árbitro -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white no-print">
+    <form method="GET" action="{{ url_for('reportes.arbitro') }}" class="row g-3 align-items-end">
+        <!-- Selector de Jornada -->
+        <div class="col-md-4">
+            <label for="id_jornada" class="form-label fw-bold small text-secondary">
+                <i class="bi bi-calendar-check text-success me-1"></i> Seleccionar Jornada a Jugar:
+            </label>
+            <select name="id_jornada" id="id_jornada" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="this.form.submit()">
+                {% for jor in jornadas %}
+                    <option value="{{ jor.id_jornada }}" {{ jor.id_jornada == selected_jornada ? 'selected' : '' }}>
+                        Jornada {{ jor.numero_jornada }} ({{ jor.fecha_juego|date('d/m/Y') }}) - {{ jor.descripcion|default('Sin descripción') }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Filtro Opcional por Partido de la Jornada -->
+        <div class="col-md-4">
+            <label for="id_partido" class="form-label fw-bold small text-secondary">
+                <i class="bi bi-calendar3-event text-primary me-1"></i> Filtrar por Partido de la Fecha:
+            </label>
+            <select name="id_partido" id="id_partido" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="this.form.submit()">
+                <option value="">-- Todos los partidos de la fecha --</option>
+                {% for part in partidos_jornada %}
+                    <option value="{{ part.id_partido }}" {{ part.id_partido == selected_partido ? 'selected' : '' }}>
+                        {{ part.local_nombre }} vs {{ part.visita_nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Filtro Opcional por Equipo -->
+        <div class="col-md-3">
+            <label for="id_equipo" class="form-label fw-bold small text-secondary">
+                <i class="bi bi-shield text-info me-1"></i> Filtrar por Club:
+            </label>
+            <select name="id_equipo" id="id_equipo" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="this.form.submit()">
+                <option value="">-- Todos los clubes --</option>
+                {% for eq in equipos %}
+                    <option value="{{ eq.id_equipo }}" {{ eq.id_equipo == selected_equipo ? 'selected' : '' }}>
+                        {{ eq.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-1 d-flex gap-2">
+            <button type="submit" class="btn btn-success rounded-3 w-100" title="Aplicar Filtros">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Banner Oficial de Información de la Jornada Consultada -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-4 bg-white border-start border-4 border-success">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-success-subtle text-success fs-6 px-3 py-1 rounded-pill fw-bold">
+                    Jornada {{ jornada_actual.numero_jornada|default(selected_jornada) }}
+                </span>
+                <span class="text-muted">|</span>
+                <span class="fw-semibold text-dark">
+                    <i class="bi bi-calendar-event me-1"></i> Fecha Oficial: {{ jornada_actual.fecha_juego ? jornada_actual.fecha_juego|date('d/m/Y') : 'Por definir' }}
+                </span>
+            </div>
+            <h4 class="fw-bold mb-1 text-dark">{{ jornada_actual.descripcion|default('Jornada Oficial de Liga Infantil') }}</h4>
+            <p class="text-muted small mb-0 no-print">
+                <i class="bi bi-info-circle me-1"></i> Las suspensiones mostradas corresponden a sanciones disciplinarias activas para esta fecha de competencia.
+            </p>
+        </div>
+
+        <div class="d-flex gap-3 text-center">
+            <div class="bg-light p-2.5 px-3 rounded-3 border">
+                <span class="d-block small text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Convocados</span>
+                <span class="h5 fw-bold text-dark mb-0">{{ total_jugadores }}</span>
+            </div>
+            <div class="bg-success-subtle p-2.5 px-3 rounded-3 border border-success-subtle">
+                <span class="d-block small text-success text-uppercase fw-semibold" style="font-size: 0.7rem;">Habilitados</span>
+                <span class="h5 fw-bold text-success mb-0">{{ total_habilitados }}</span>
+            </div>
+            <div class="bg-danger-subtle p-2.5 px-3 rounded-3 border border-danger-subtle">
+                <span class="d-block small text-danger text-uppercase fw-semibold" style="font-size: 0.7rem;">Suspendidos</span>
+                <span class="h5 fw-bold text-danger mb-0">{{ total_suspendidos }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerta destacada para el árbitro si hay jugadores suspendidos en la jornada -->
+{% if total_suspendidos > 0 %}
+<div class="alert alert-danger shadow-sm rounded-4 d-flex align-items-center gap-3 p-3 mb-4" role="alert">
+    <div class="fs-1 text-danger">
+        <i class="bi bi-shield-slash-fill"></i>
+    </div>
+    <div>
+        <h6 class="alert-heading fw-bold mb-1">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> ¡Atención Árbitro! Hay {{ total_suspendidos }} jugador(es) sancionado(s) con suspensión
+        </h6>
+        <p class="mb-0 small">
+            Los jugadores marcados con semáforo <strong>SUSPENDIDO</strong> no están autorizados para participar ni firmar la planilla de juego en esta jornada bajo pena de alineación indebida.
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Listado de Equipos y Jugadores -->
+{% if equipos_agrupados is empty %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+        <div class="mb-3 text-muted">
+            <i class="bi bi-people fs-1"></i>
+        </div>
+        <h5 class="fw-bold text-dark">No se encontraron jugadores para esta jornada</h5>
+        <p class="text-muted small mb-3">Verifique los filtros aplicados o compruebe que existan equipos asociados a los partidos de esta jornada.</p>
+        <div class="no-print">
+            <a href="{{ url_for('reportes.arbitro') }}" class="btn btn-outline-success rounded-3">Restablecer filtros</a>
+        </div>
+    </div>
+{% else %}
+    {% for nombreEquipo, grupo in equipos_agrupados %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden bg-white">
+            <!-- Barra de Título del Equipo -->
+            <div class="team-header-strip p-3 px-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    {% if grupo.foto_url %}
+                        <img src="{{ grupo.foto_url }}" alt="{{ grupo.nombre }}" class="team-logo-md bg-white rounded-circle p-1" onerror="this.style.display='none'">
+                    {% else %}
+                        <div class="team-logo-md bg-light text-dark rounded-circle d-flex align-items-center justify-content-center fw-bold">
+                            <i class="bi bi-shield-fill text-success fs-4"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <h5 class="fw-bold mb-0 text-white">{{ grupo.nombre }}</h5>
+                        <small class="text-light opacity-75">Plantilla oficial para la jornada | {{ grupo.jugadores|length }} jugadores registrados</small>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success text-white rounded-pill px-3 py-1.5">
+                        <i class="bi bi-check-circle-fill me-1"></i> {{ grupo.habilitados }} Habilitados
+                    </span>
+                    {% if grupo.suspendidos > 0 %}
+                        <span class="badge bg-danger text-white rounded-pill px-3 py-1.5">
+                            <i class="bi bi-slash-circle-fill me-1"></i> {{ grupo.suspendidos }} Suspendido(s)
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tabla de Jugadores del Equipo -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary small text-uppercase fw-semibold">
+                        <tr>
+                            <th class="ps-4" style="width: 80px;">Foto</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Nacimiento / Edad</th>
+                            <th class="text-center" style="width: 220px;">Estado en esta Fecha</th>
+                            <th class="text-center no-print" style="width: 120px;">Ficha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for j in grupo.jugadores %}
+                            <tr class="{{ j.esta_suspendido ? 'table-danger-subtle' : '' }}">
+                                <!-- Fotografía obligatoria -->
+                                <td class="ps-4">
+                                    {% if j.foto_url %}
+                                        <img src="{{ j.foto_url }}" alt="{{ j.nombres }}" class="player-photo shadow-sm" onerror="this.onerror=null;this.src='/uploads/jugadores/default.png';">
+                                    {% else %}
+                                        <div class="player-photo bg-secondary text-white d-flex align-items-center justify-content-center fw-bold fs-6">
+                                            {{ j.nombres|slice(0, 1) }}{{ j.apellidos|slice(0, 1) }}
+                                        </div>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Nombres y Apellidos -->
+                                <td>
+                                    <div class="fw-bold text-dark fs-6">{{ j.nombres }} {{ j.apellidos }}</div>
+                                    <small class="text-muted">ID: #{{ j.id_jugador }} | {{ grupo.nombre }}</small>
+                                </td>
+
+                                <!-- Fecha de Nacimiento y Edad -->
+                                <td>
+                                    <div class="fw-medium text-dark">{{ j.fecha_nacimiento|date('d/m/Y') }}</div>
+                                    <small class="text-muted"><i class="bi bi-cake2 me-1"></i>{{ j.edad }} años</small>
+                                </td>
+
+                                <!-- Estado de Suspensión para la Jornada -->
+                                <td class="text-center">
+                                    {% if j.esta_suspendido %}
+                                        <div class="d-inline-flex flex-column align-items-center">
+                                            <span class="badge status-badge-suspended px-3 py-1.5 rounded-pill fs-7 mb-1">
+                                                <i class="bi bi-x-octagon-fill me-1"></i> SUSPENDIDO
+                                            </span>
+                                            <div class="suspension-banner small text-danger text-start mt-1" style="max-width: 280px;">
+                                                <div class="fw-bold">
+                                                    <i class="bi bi-exclamation-circle-fill me-1"></i> Sanción Disciplinaria:
+                                                </div>
+                                                <div class="small">{{ j.suspension_motivo|default('Suspensión por acumulación o tarjeta roja.') }}</div>
+                                                {% if j.suspension_fecha %}
+                                                    <div class="small text-muted mt-0.5">Fecha sanción: {{ j.suspension_fecha|date('d/m/Y') }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="badge status-badge-ok px-3 py-1.5 rounded-pill fs-7">
+                                            <i class="bi bi-check-circle-fill text-success me-1"></i> HABILITADO
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Enlace a Ficha del Jugador -->
+                                <td class="text-center no-print">
+                                    <a href="/reportes/jugadores/{{ j.id_jugador }}" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" title="Ver Expediente Completo">
+                                        <i class="bi bi-eye-fill"></i> Perfil
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Pie de firmas oficial para cuando se imprime el Acta -->
+<div class="print-only-signature mt-5 pt-4">
+    <div class="row text-center mt-4">
+        <div class="col-4">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Firma Árbitro Principal
+            </div>
+            <small>Cédula Arbitral / Colegio de Árbitros</small>
+        </div>
+        <div class="col-4">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Firma Delegado Local
+            </div>
+            <small>Conformidad Nómina Club Local</small>
+        </div>
+        <div class="col-4">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Firma Delegado Visitante
+            </div>
+            <small>Conformidad Nómina Club Visitante</small>
+        </div>
+    </div>
+</div>
+{% endblock %}
