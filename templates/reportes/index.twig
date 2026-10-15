@@ -1,0 +1,256 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}Centro de Reportes e Informes | {{ appName }}{% endblock %}
+
+{% block styles %}
+<style>
+    .report-card {
+        border-radius: 1rem;
+        transition: all 0.25s ease-in-out;
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.09) !important;
+        border-color: rgba(25, 135, 84, 0.3);
+    }
+    .icon-bubble {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.65rem;
+    }
+    .stat-mini-card {
+        background: #ffffff;
+        border-radius: 0.85rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Reportes e Informes</li>
+        </ol>
+    </nav>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+        <div>
+            <h2 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-bar-chart-line-fill text-success me-2"></i>Centro de Reportes e Informes
+            </h2>
+            <p class="text-muted small mb-0">Módulo oficial de reportería y consulta técnica para árbitros, clubes y directivos.</p>
+        </div>
+        <div>
+            <span class="badge bg-dark-subtle text-dark border px-3 py-2 rounded-pill">
+                <i class="bi bi-calendar3 me-1"></i> Temporada Oficial 2026
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Barra de Resumen Ejecutivo y Estadísticas Globales -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-mini-card shadow-sm d-flex align-items-center gap-3">
+            <div class="icon-bubble bg-success-subtle text-success">
+                <i class="bi bi-dribbble"></i>
+            </div>
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold d-block">Goles Totales</span>
+                <span class="h4 fw-bold mb-0 text-dark">{{ metricas.total_goles|default(0) }}</span>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Anotaciones registradas</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-mini-card shadow-sm d-flex align-items-center gap-3">
+            <div class="icon-bubble bg-warning-subtle text-warning">
+                <i class="bi bi-card-checklist"></i>
+            </div>
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold d-block">Tarjetas Amarillas</span>
+                <span class="h4 fw-bold mb-0 text-dark">{{ metricas.total_amarillas|default(0) }}</span>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Amonestaciones en juego</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-mini-card shadow-sm d-flex align-items-center gap-3">
+            <div class="icon-bubble bg-danger-subtle text-danger">
+                <i class="bi bi-slash-circle-fill"></i>
+            </div>
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold d-block">Tarjetas Rojas</span>
+                <span class="h4 fw-bold mb-0 text-dark">{{ metricas.total_rojas|default(0) }}</span>
+                <small class="text-danger d-block fw-medium" style="font-size: 0.75rem;">{{ metricas.total_suspensiones|default(0) }} con suspensión</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-mini-card shadow-sm d-flex align-items-center gap-3">
+            <div class="icon-bubble bg-primary-subtle text-primary">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <span class="text-muted small text-uppercase fw-semibold d-block">Jugadores Activos</span>
+                <span class="h4 fw-bold mb-0 text-dark">{{ metricas.total_jugadores|default(0) }}</span>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">En {{ metricas.total_equipos|default(0) }} equipos inscritos</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tarjetas Principales de los 4 Reportes Solicitados -->
+<div class="row g-4">
+    <!-- Reporte 1: Para el Árbitro -->
+    <div class="col-md-6 col-xl-6">
+        <div class="card report-card shadow-sm h-100 p-4 bg-white position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 bg-success text-white px-3 py-1 rounded-bottom-start small fw-bold">
+                Requerimiento 4.a
+            </div>
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="icon-bubble bg-success text-white shadow-sm flex-shrink-0">
+                    <i class="bi bi-person-badge-fill"></i>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">Nómina Oficial para el Árbitro</h4>
+                    <p class="text-muted small mb-0">
+                        Listado completo de equipos y jugadores por jornada con fotografía obligatoria e indicación precisa de <strong>suspensiones activas</strong> para el colegiado.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-light rounded-3 p-3 mb-3 small text-secondary">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-check2-circle text-success fs-6"></i>
+                    <span>Fotografía y cédula infantil de cada jugador.</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-6"></i>
+                    <span>Detección automática de sanciones en la fecha a jugar.</span>
+                </div>
+            </div>
+            <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
+                <span class="text-muted small"><i class="bi bi-printer me-1"></i> Optimizado para impresión</span>
+                <a href="{{ url_for('reportes.arbitro') }}" class="btn btn-success px-4 py-2 rounded-3 fw-medium">
+                    Consultar Acta <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 2: Incidencias de Jugadores -->
+    <div class="col-md-6 col-xl-6">
+        <div class="card report-card shadow-sm h-100 p-4 bg-white position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 bg-warning text-dark px-3 py-1 rounded-bottom-start small fw-bold">
+                Requerimiento 4.b
+            </div>
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="icon-bubble bg-warning-subtle text-dark shadow-sm flex-shrink-0">
+                    <i class="bi bi-exclamation-octagon-fill text-warning"></i>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">Reporte de Incidencias Disciplinarias</h4>
+                    <p class="text-muted small mb-0">
+                        Historial de tarjetas amarillas, rojas y suspensiones disciplinarias filtradas por equipo (uno o todos) y jugador individual.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-light rounded-3 p-3 mb-3 small text-secondary">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-funnel-fill text-primary fs-6"></i>
+                    <span>Filtros combinados por club, jugador y tipo de tarjeta.</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-x text-danger fs-6"></i>
+                    <span>Trazabilidad de jornadas y fechas de suspensión asignadas.</span>
+                </div>
+            </div>
+            <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
+                <span class="text-muted small"><i class="bi bi-shield-exclamation me-1"></i> Control del tribunal de disciplina</span>
+                <a href="{{ url_for('reportes.incidencias') }}" class="btn btn-warning text-dark px-4 py-2 rounded-3 fw-medium">
+                    Ver Incidencias <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 3: Reporte de Goleadores -->
+    <div class="col-md-6 col-xl-6">
+        <div class="card report-card shadow-sm h-100 p-4 bg-white position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 bg-primary text-white px-3 py-1 rounded-bottom-start small fw-bold">
+                Requerimiento 4.c
+            </div>
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="icon-bubble bg-primary text-white shadow-sm flex-shrink-0">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">Tabla de Goleadores (Pichichi)</h4>
+                    <p class="text-muted small mb-0">
+                        Ranking totalizado de goles por jugador ordenado de mayor a menor, con podio de líderes, fotografía y escudo de su equipo.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-light rounded-3 p-3 mb-3 small text-secondary">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-award-fill text-warning fs-6"></i>
+                    <span>Líder actual: <strong>{{ metricas.lider_goleo ? (metricas.lider_goleo.nombres ~ ' ' ~ metricas.lider_goleo.apellidos ~ ' (' ~ metricas.lider_goleo.total_goles ~ ' goles)') : 'Sin registros aún' }}</strong></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-sort-numeric-down-alt text-primary fs-6"></i>
+                    <span>Totalización matemática descendente y promedio de gol.</span>
+                </div>
+            </div>
+            <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
+                <span class="text-muted small"><i class="bi bi-graph-up-arrow me-1"></i> Estadísticas en tiempo real</span>
+                <a href="{{ url_for('reportes.goleadores') }}" class="btn btn-primary px-4 py-2 rounded-3 fw-medium">
+                    Ver Tabla de Goleo <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reporte 4: Consulta en Pantalla de Jugador -->
+    <div class="col-md-6 col-xl-6">
+        <div class="card report-card shadow-sm h-100 p-4 bg-white position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 bg-info text-dark px-3 py-1 rounded-bottom-start small fw-bold">
+                Requerimiento 4.d
+            </div>
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="icon-bubble bg-info-subtle text-info-emphasis shadow-sm flex-shrink-0">
+                    <i class="bi bi-person-vcard-fill"></i>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-1 text-dark">Consulta Integral de Jugador</h4>
+                    <p class="text-muted small mb-0">
+                        Expediente técnico completo de cualquier jugador: ficha personal, club, historial partido a partido de goles anotados y registro disciplinario.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-light rounded-3 p-3 mb-3 small text-secondary">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-search text-info fs-6"></i>
+                    <span>Buscador y selector rápido con filtros de club.</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-person-fill text-dark fs-6"></i>
+                    <span>Semáforo de habilitación e historial de partidos jugados.</span>
+                </div>
+            </div>
+            <div class="mt-auto d-flex justify-content-between align-items-center pt-2">
+                <span class="text-muted small"><i class="bi bi-fingerprint me-1"></i> Ficha individual</span>
+                <a href="{{ url_for('reportes.jugador') }}" class="btn btn-info text-dark px-4 py-2 rounded-3 fw-medium">
+                    Consultar Ficha <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

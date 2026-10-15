@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Repositories\EquipoRepository;
+use App\Repositories\GolRepository;
+use App\Repositories\JugadorRepository;
+use App\Repositories\JornadaRepository;
+use App\Repositories\PartidoRepository;
+use App\Repositories\ReporteRepository;
+use App\Controllers\ReporteController;
+use App\Services\UploadService;
+use App\Support\Flash;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
@@ -34,6 +43,49 @@ $containerBuilder->addDefinitions([
         );
     },
 
+    // Servicio de mensajes Flash
+    Flash::class => function (): Flash {
+        return new Flash();
+    },
+
+    // Servicio de subida de archivos
+    UploadService::class => function (): UploadService {
+        return new UploadService(dirname(__DIR__) . '/public');
+    },
+
+    // Repositorios
+    EquipoRepository::class => function (ContainerInterface $c): EquipoRepository {
+        return new EquipoRepository($c->get(PDO::class));
+    },
+
+    JugadorRepository::class => function (ContainerInterface $c): JugadorRepository {
+        return new JugadorRepository($c->get(PDO::class));
+    },
+
+    JornadaRepository::class => function (ContainerInterface $c): JornadaRepository {
+        return new JornadaRepository($c->get(PDO::class));
+    },
+
+    PartidoRepository::class => function (ContainerInterface $c): PartidoRepository {
+        return new PartidoRepository($c->get(PDO::class));
+    },
+  
+    GolRepository::class => function (ContainerInterface $c): GolRepository {
+        return new GolRepository($c->get(PDO::class));
+    },
+
+    ReporteRepository::class => function (ContainerInterface $c): ReporteRepository {
+        return new ReporteRepository($c->get(PDO::class));
+    },
+
+    ReporteController::class => function (ContainerInterface $c): ReporteController {
+        return new ReporteController(
+            $c->get(Twig::class),
+            $c->get(ReporteRepository::class),
+            $c->get(Flash::class)
+        );
+    },
+
     // Motor de plantillas Twig
     Twig::class => function (ContainerInterface $c): Twig {
         $twigConfig = $c->get('settings')['twig'];
@@ -45,6 +97,7 @@ $containerBuilder->addDefinitions([
         $environment = $twig->getEnvironment();
         $environment->addGlobal('appName', $appConfig['name']);
         $environment->addGlobal('appEnv', $appConfig['env']);
+        $environment->addGlobal('flash', $c->get(Flash::class));
 
         return $twig;
     },
