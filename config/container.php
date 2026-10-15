@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
+use App\Controllers\ReporteController;
 use App\Repositories\EquipoRepository;
 use App\Repositories\GolRepository;
-use App\Repositories\JugadorRepository;
+use App\Repositories\IncidenciaRepository;
 use App\Repositories\JornadaRepository;
+use App\Repositories\JugadorRepository;
 use App\Repositories\PartidoRepository;
 use App\Repositories\ReporteRepository;
-use App\Controllers\ReporteController;
 use App\Services\UploadService;
 use App\Support\Flash;
+use App\Support\IncidenciaCsrf;
+use App\Validation\IncidenciaValidator;
 use DI\ContainerBuilder;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;

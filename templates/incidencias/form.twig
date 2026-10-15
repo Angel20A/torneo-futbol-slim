@@ -1,0 +1,160 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ id ? 'Editar incidencia' : 'Registrar incidencia' }} | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-8">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">{{ id ? 'Editar incidencia' : 'Registrar incidencia' }}</h1>
+                <p class="text-muted mb-0">Los campos marcados con * son obligatorios.</p>
+            </div>
+            <a class="btn btn-outline-secondary" href="{{ url_for('incidencias.index') }}">Volver</a>
+        </div>
+
+        <form class="card border-0 shadow-sm" method="post" action="{{ id ? url_for('incidencias.update', {'id': id}) : url_for('incidencias.store') }}" novalidate>
+            <div class="card-body p-4">
+                <input type="hidden" name="_csrf" value="{{ csrf_token }}">
+
+                <div class="mb-3">
+                    <label for="id_partido" class="form-label">Partido *</label>
+                    <select class="form-select{% if errors.id_partido is defined %} is-invalid{% endif %}" id="id_partido" name="id_partido" required>
+                        <option value="">Selecciona un partido</option>
+                        {% if errors.id_partido is defined and values.id_partido is not empty %}
+                            <option value="{{ values.id_partido }}" selected disabled>Partido seleccionado no disponible</option>
+                        {% endif %}
+                        {% for partido in partidos %}
+                            <option value="{{ partido.id_partido }}" data-fecha="{{ partido.fecha }}" data-jugadores-url="{{ url_for('incidencias.players', {'id': partido.id_partido}) }}"{% if errors.id_partido is not defined and values.id_partido == partido.id_partido %} selected{% endif %}>
+                                Jornada {{ partido.numero_jornada }} · {{ partido.fecha }} · {{ partido.equipo_local }} vs. {{ partido.equipo_visita }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.id_partido is defined %}<div class="invalid-feedback">{{ errors.id_partido }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_jugador" class="form-label">Jugador *</label>
+                    <select class="form-select{% if errors.id_jugador is defined %} is-invalid{% endif %}" id="id_jugador" name="id_jugador" required>
+                        <option value="">Selecciona primero un partido</option>
+                        {% if errors.id_jugador is defined and values.id_jugador is not empty %}
+                            <option value="{{ values.id_jugador }}" selected disabled>Jugador seleccionado no disponible para este partido</option>
+                        {% endif %}
+                        {% for jugador in jugadores %}
+                            <option value="{{ jugador.id_jugador }}"{% if errors.id_jugador is not defined and values.id_jugador == jugador.id_jugador %} selected{% endif %}>
+                                {{ jugador.nombres }} {{ jugador.apellidos }} — {{ jugador.equipo_nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if errors.id_jugador is defined %}<div class="invalid-feedback">{{ errors.id_jugador }}</div>{% endif %}
+                    <div id="jugador-carga-error" class="form-text text-danger" role="status"></div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="tipo_tarjeta" class="form-label">Tarjeta *</label>
+                        <select class="form-select{% if errors.tipo_tarjeta is defined %} is-invalid{% endif %}" id="tipo_tarjeta" name="tipo_tarjeta" required>
+                            <option value="">Selecciona una tarjeta</option>
+                            <option value="amarilla"{% if values.tipo_tarjeta == 'amarilla' %} selected{% endif %}>Amarilla</option>
+                            <option value="roja"{% if values.tipo_tarjeta == 'roja' %} selected{% endif %}>Roja</option>
+                        </select>
+                        {% if errors.tipo_tarjeta is defined %}<div class="invalid-feedback">{{ errors.tipo_tarjeta }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fecha_incidencia" class="form-label">Fecha de incidencia *</label>
+                        <input class="form-control{% if errors.fecha_incidencia is defined %} is-invalid{% endif %}" type="{{ errors.fecha_incidencia is defined ? 'text' : 'date' }}" id="fecha_incidencia" name="fecha_incidencia" value="{{ values.fecha_incidencia|default('') }}" placeholder="YYYY-MM-DD" required>
+                        {% if errors.fecha_incidencia is defined %}<div class="invalid-feedback">{{ errors.fecha_incidencia }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripción *</label>
+                    <textarea class="form-control{% if errors.descripcion is defined %} is-invalid{% endif %}" id="descripcion" name="descripcion" rows="4" required>{{ values.descripcion|default('') }}</textarea>
+                    {% if errors.descripcion is defined %}<div class="invalid-feedback">{{ errors.descripcion }}</div>{% endif %}
+                </div>
+
+                <div id="campos-suspension" class="border rounded-3 p-3 mb-4 bg-light">
+                    <h2 class="h6 fw-bold mb-3">Suspensión por tarjeta roja</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_jornada_suspension" class="form-label">Jornada de suspensión (opcional)</label>
+                            <select class="form-select{% if errors.id_jornada_suspension is defined %} is-invalid{% endif %}" id="id_jornada_suspension" name="id_jornada_suspension">
+                                <option value="">Sin jornada específica</option>
+                                {% if errors.id_jornada_suspension is defined and values.id_jornada_suspension is not empty %}
+                                    <option value="{{ values.id_jornada_suspension }}" selected disabled>Jornada seleccionada no disponible</option>
+                                {% endif %}
+                                {% for jornada in jornadas %}
+                                    <option value="{{ jornada.id_jornada }}" data-fecha="{{ jornada.fecha_juego }}"{% if errors.id_jornada_suspension is not defined and values.id_jornada_suspension == jornada.id_jornada %} selected{% endif %}>Jornada {{ jornada.numero_jornada }} · {{ jornada.fecha_juego }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if errors.id_jornada_suspension is defined %}<div class="invalid-feedback">{{ errors.id_jornada_suspension }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fecha_suspension" class="form-label">Fecha de suspensión *</label>
+                            <input class="form-control{% if errors.fecha_suspension is defined %} is-invalid{% endif %}" type="{{ errors.fecha_suspension is defined ? 'text' : 'date' }}" id="fecha_suspension" name="fecha_suspension" value="{{ values.fecha_suspension|default('') }}" placeholder="YYYY-MM-DD">
+                            {% if errors.fecha_suspension is defined %}<div class="invalid-feedback">{{ errors.fecha_suspension }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <p class="form-text mb-0">La suspensión corresponde solo a esta fecha. Si eliges una jornada, ambas fechas deben coincidir.</p>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-success" type="submit">{{ id ? 'Guardar cambios' : 'Registrar incidencia' }}</button>
+                    <a class="btn btn-outline-secondary" href="{{ url_for('incidencias.index') }}">Cancelar</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+    const match = document.getElementById('id_partido');
+    const player = document.getElementById('id_jugador');
+    const matchDate = document.getElementById('fecha_incidencia');
+    const card = document.getElementById('tipo_tarjeta');
+    const suspensionBox = document.getElementById('campos-suspension');
+    const suspensionDate = document.getElementById('fecha_suspension');
+    const suspensionRound = document.getElementById('id_jornada_suspension');
+    const loadError = document.getElementById('jugador-carga-error');
+    let requestNumber = 0;
+
+    match.addEventListener('change', async () => {
+        const option = match.selectedOptions[0];
+        matchDate.value = option?.dataset.fecha || '';
+        player.replaceChildren(new Option('Selecciona un jugador', ''));
+        loadError.textContent = '';
+        const currentRequest = ++requestNumber;
+        if (!option?.dataset.jugadoresUrl) return;
+        try {
+            const response = await fetch(option.dataset.jugadoresUrl, {headers: {'Accept': 'application/json'}});
+            if (!response.ok) throw new Error('No se pudieron cargar los jugadores.');
+            const jugadores = await response.json();
+            if (currentRequest !== requestNumber) return;
+            for (const jugador of jugadores) {
+                player.add(new Option(`${jugador.nombres} ${jugador.apellidos} — ${jugador.equipo_nombre}`, jugador.id_jugador));
+            }
+        } catch (_) {
+            if (currentRequest === requestNumber) loadError.textContent = 'No se pudieron cargar los jugadores. Inténtalo de nuevo.';
+        }
+    });
+
+    function updateSuspensionVisibility() {
+        const isRed = card.value === 'roja';
+        suspensionBox.hidden = !isRed;
+        suspensionDate.disabled = !isRed;
+        suspensionRound.disabled = !isRed;
+        suspensionDate.required = isRed;
+    }
+    card.addEventListener('change', updateSuspensionVisibility);
+    updateSuspensionVisibility();
+
+    suspensionRound.addEventListener('change', () => {
+        const fecha = suspensionRound.selectedOptions[0]?.dataset.fecha;
+        if (fecha) suspensionDate.value = fecha;
+    });
+})();
+</script>
+{% endblock %}

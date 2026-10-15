@@ -1,0 +1,83 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}Equipos | {{ appName }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Equipos</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shield-shaded text-success me-2"></i>Gestión de Equipos
+        </h2>
+        <p class="text-muted small mb-0">Administración de clubes participantes y sus categorías infantiles.</p>
+    </div>
+
+    <div>
+        <a href="{{ url_for('equipos.create') }}" class="btn btn-success shadow-sm rounded-3 px-3 py-2 fw-medium">
+            <i class="bi bi-plus-circle me-1"></i> Registrar Equipo
+        </a>
+    </div>
+</div>
+
+{% if equipos is empty %}
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+        <div class="my-4">
+            <i class="bi bi-shield-slash display-1 text-muted opacity-50 mb-3 d-block"></i>
+            <h4 class="fw-bold text-secondary">No hay equipos registrados</h4>
+            <p class="text-muted small">Comienza registrando los clubes que disputarán el torneo infantil.</p>
+            <a href="{{ url_for('equipos.create') }}" class="btn btn-success rounded-pill px-4 mt-2">
+                <i class="bi bi-plus-lg me-1"></i> Crear Primer Equipo
+            </a>
+        </div>
+    </div>
+{% else %}
+    <div class="row g-4">
+        {% for eq in equipos %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 card-hover overflow-hidden">
+                    <div class="bg-light p-4 text-center border-bottom position-relative">
+                        {% if eq.foto_url %}
+                            <img src="{{ eq.foto_url }}" alt="{{ eq.nombre }}" class="team-logo-md rounded-3 shadow-sm bg-white p-1" onerror="this.onerror=null;this.src='/uploads/equipos/default-team.png';">
+                        {% else %}
+                            <div class="team-logo-md rounded-3 bg-secondary-subtle text-secondary d-inline-flex align-items-center justify-content-center mx-auto fs-3 shadow-sm">
+                                <i class="bi bi-shield-fill"></i>
+                            </div>
+                        {% endif %}
+                        <span class="position-absolute top-0 end-0 m-3 badge rounded-pill {% if eq.total_jugadores > 0 %}bg-primary-subtle text-primary border border-primary-subtle{% else %}bg-secondary-subtle text-muted{% endif %}">
+                            <i class="bi bi-people-fill me-1"></i>{{ eq.total_jugadores }} {{ eq.total_jugadores == 1 ? 'Jugador' : 'Jugadores' }}
+                        </span>
+                    </div>
+
+                    <div class="card-body d-flex flex-column text-center p-3">
+                        <h5 class="fw-bold text-dark mb-1">{{ eq.nombre }}</h5>
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-calendar3 me-1"></i>Registrado: {{ eq.creado_en|date("d/m/Y") }}
+                        </p>
+
+                        <div class="mt-auto pt-2 border-top d-flex justify-content-center gap-2">
+                            <a href="/jugadores?id_equipo={{ eq.id_equipo }}" class="btn btn-sm btn-outline-info rounded-3 px-2.5" title="Ver Plantilla">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <a href="/equipos/{{ eq.id_equipo }}/editar" class="btn btn-sm btn-outline-primary rounded-3 px-2.5" title="Editar Equipo">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            <form action="/equipos/{{ eq.id_equipo }}/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar el equipo \'{{ eq.nombre|e('js') }}\'? Esta acción es irreversible.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-3 px-2.5" title="Eliminar Equipo" {% if eq.total_jugadores > 0 %}disabled data-bs-toggle="tooltip" data-bs-title="Tiene jugadores asociados"{% endif %}>
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

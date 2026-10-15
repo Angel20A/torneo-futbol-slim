@@ -1,0 +1,11 @@
+{# Logo de equipo con respaldo: si el archivo no existe se muestra un escudo en su lugar.
+   Variables: foto (ruta o null), nombre, tam ('sm' por defecto | 'md') #}
+{% set tam = tam|default('sm') %}
+{% set claseImg = tam == 'md' ? 'team-logo-md rounded-3 shadow-sm bg-white p-1' : 'team-logo-sm rounded-2' %}
+{% set claseIcono = tam == 'md' ? 'display-5' : 'fs-4' %}
+{% if foto %}
+    <img src="{{ foto }}" alt="{{ nombre }}" class="{{ claseImg }}" onerror="this.classList.add('d-none');this.nextElementSibling.classList.remove('d-none');">
+    <i class="bi bi-shield-fill text-muted {{ claseIcono }} d-none" title="{{ nombre }}"></i>
+{% else %}
+    <i class="bi bi-shield-fill text-muted {{ claseIcono }}" title="{{ nombre }}"></i>
+{% endif %}
