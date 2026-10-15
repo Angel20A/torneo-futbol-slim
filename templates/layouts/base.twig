@@ -107,10 +107,38 @@
                             <i class="bi bi-exclamation-triangle-fill me-1"></i> Incidencias
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/reportes">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarReportes" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-bar-chart-line-fill me-1"></i> Reportes
                         </a>
+                        <ul class="dropdown-menu shadow-sm rounded-3 border-0 py-2" aria-labelledby="navbarReportes">
+                            <li>
+                                <a class="dropdown-item py-1.5 fw-medium" href="/reportes">
+                                    <i class="bi bi-grid-fill text-success me-2"></i> Centro de Reportes
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item py-1.5" href="/reportes/arbitro">
+                                    <i class="bi bi-person-badge text-primary me-2"></i> Nómina para Árbitro
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-1.5" href="/reportes/incidencias">
+                                    <i class="bi bi-shield-exclamation text-warning me-2"></i> Reporte de Incidencias
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-1.5" href="/reportes/goleadores">
+                                    <i class="bi bi-trophy text-success me-2"></i> Tabla de Goleadores
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-1.5" href="/reportes/jugadores">
+                                    <i class="bi bi-person-vcard text-info me-2"></i> Consulta de Jugador
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
 

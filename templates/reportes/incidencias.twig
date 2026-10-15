@@ -1,0 +1,400 @@
+{% extends 'layouts/base.twig' %}
+
+{% block title %}{{ title }} | {{ appName }}{% endblock %}
+
+{% block styles %}
+<style>
+    .player-mini-photo {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #e2e8f0;
+    }
+    .card-tarjeta-amarilla {
+        display: inline-block;
+        width: 16px;
+        height: 22px;
+        background-color: #ffc107;
+        border-radius: 3px;
+        border: 1px solid #d39e00;
+        vertical-align: middle;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .card-tarjeta-roja {
+        display: inline-block;
+        width: 16px;
+        height: 22px;
+        background-color: #dc3545;
+        border-radius: 3px;
+        border: 1px solid #bd2130;
+        vertical-align: middle;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .print-header-incidencias {
+        display: none;
+    }
+    .print-only-signature {
+        display: none;
+    }
+
+    /* Reglas para Impresión Oficial */
+    @media print {
+        @page {
+            size: portrait;
+            margin: 1.2cm 1cm 1.5cm 1cm;
+        }
+        body {
+            background-color: #ffffff !important;
+            font-size: 10pt;
+            color: #000000 !important;
+        }
+        .navbar, .footer, .no-print, .btn, .breadcrumb {
+            display: none !important;
+        }
+        .container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .print-header-incidencias {
+            display: block !important;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .card {
+            border: 1px solid #333333 !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+        }
+        .table {
+            border-color: #dee2e6 !important;
+            font-size: 9.5pt !important;
+        }
+        .table th, .table td {
+            padding: 6px 8px !important;
+        }
+        .card-tarjeta-amarilla {
+            background-color: #ffc107 !important;
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .card-tarjeta-roja {
+            background-color: #dc3545 !important;
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .badge {
+            border: 1px solid #333333 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        .print-only-signature {
+            display: block !important;
+            page-break-inside: avoid;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Membrete Oficial para Impresión -->
+<div class="print-header-incidencias">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h4 class="fw-bold mb-0 text-uppercase">{{ appName|default('Torneo Infantil de Fútbol') }}</h4>
+            <h5 class="fw-bold text-dark mb-1">INFORME DISCIPLINARIO DE FALTAS Y SANCIONES</h5>
+            <div class="small text-muted">
+                Registro oficial del Tribunal de Disciplina y Amonestaciones Arbitrales.
+            </div>
+        </div>
+        <div class="col-4 text-end small">
+            <div><strong>Tribunal de Disciplina</strong></div>
+            <div>Fecha de Emisión: {{ "now"|date("d/m/Y H:i") }}</div>
+            <div>Total Registros: {{ incidencias|length }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Cabecera de Página en Pantalla -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 no-print">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}" class="text-decoration-none text-muted">Inicio</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('reportes.index') }}" class="text-decoration-none text-muted">Reportes</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Incidencias por Equipo y Jugador</li>
+            </ol>
+        </nav>
+        <h2 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-shield-exclamation text-warning me-2"></i>Reporte de Incidencias Disciplinarias
+        </h2>
+        <p class="text-muted small mb-0">Control de amonestaciones, tarjetas rojas y sanciones por club y jugador.</p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" onclick="window.print()" class="btn btn-outline-dark shadow-sm rounded-3 fw-medium">
+            <i class="bi bi-printer me-1"></i> Imprimir Reporte
+        </button>
+        <a href="{{ url_for('reportes.index') }}" class="btn btn-light border shadow-sm rounded-3">
+            <i class="bi bi-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- Filtros Dinámicos: Equipo, Jugador y Tipo de Tarjeta -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white no-print">
+    <form method="GET" action="{{ url_for('reportes.incidencias') }}" class="row g-3 align-items-end">
+        <!-- Selector de Equipo -->
+        <div class="col-md-4">
+            <label for="id_equipo" class="form-label fw-bold small text-secondary">
+                <i class="bi bi-shield text-success me-1"></i> Equipo:
+            </label>
+            <select name="id_equipo" id="id_equipo" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="this.form.submit()">
+                <option value="">-- Todos los Equipos --</option>
+                {% for eq in equipos %}
+                    <option value="{{ eq.id_equipo }}" {{ eq.id_equipo == selected_equipo ? 'selected' : '' }}>
+                        {{ eq.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Selector de Jugador -->
+        <div class="col-md-4">
+            <label for="id_jugador" class="form-label fw-bold small text-secondary">
+                <i class="bi bi-person text-primary me-1"></i> Jugador:
+            </label>
+            <select name="id_jugador" id="id_jugador" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="this.form.submit()">
+                <option value="">-- Todos los Jugadores --</option>
+                {% for jug in jugadores_filtro %}
+                    <option value="{{ jug.id_jugador }}" {{ jug.id_jugador == selected_jugador ? 'selected' : '' }}>
+                        {{ jug.nombres }} {{ jug.apellidos }} ({{ jug.equipo_nombre }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Selector de Tipo de Tarjeta -->
+        <div class="col-md-3">
+            <label for="tipo_tarjeta" class="form-label fw-bold small text-secondary">
+                <i class="bi bi-card-text text-warning me-1"></i> Tipo de Tarjeta:
+            </label>
+            <select name="tipo_tarjeta" id="tipo_tarjeta" class="form-select rounded-3 shadow-none border-secondary-subtle" onchange="this.form.submit()">
+                <option value="">-- Todas las tarjetas --</option>
+                <option value="amarilla" {{ selected_tipo == 'amarilla' ? 'selected' : '' }}>Tarjetas Amarillas</option>
+                <option value="roja" {{ selected_tipo == 'roja' ? 'selected' : '' }}>Tarjetas Rojas</option>
+            </select>
+        </div>
+
+        <div class="col-md-1 d-flex gap-2">
+            <button type="submit" class="btn btn-warning text-dark rounded-3 w-100" title="Filtrar">
+                <i class="bi bi-funnel-fill"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Resumen Cuantitativo del Filtro Aplicado -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-secondary-subtle text-secondary p-2.5 fs-4">
+                    <i class="bi bi-card-list"></i>
+                </div>
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase d-block">Incidencias</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ resumen.total_incidencias|default(0) }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-warning-subtle text-warning p-2.5 fs-4">
+                    <div class="card-tarjeta-amarilla"></div>
+                </div>
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase d-block">Amarillas</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ resumen.total_amarillas|default(0) }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-danger-subtle text-danger p-2.5 fs-4">
+                    <div class="card-tarjeta-roja"></div>
+                </div>
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase d-block">Rojas Directas</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ resumen.total_rojas|default(0) }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-danger text-white p-2.5 fs-4">
+                    <i class="bi bi-shield-slash"></i>
+                </div>
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase d-block">Suspensiones</span>
+                    <h4 class="fw-bold mb-0 text-dark">{{ resumen.total_suspensiones|default(0) }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Incidencias Registradas -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+    <div class="p-3 px-4 border-bottom bg-light d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0 text-dark">
+            <i class="bi bi-list-check me-2"></i>Historial Detallado de Faltas y Amonestaciones
+        </h5>
+        <span class="badge bg-secondary rounded-pill">{{ incidencias|length }} registro(s)</span>
+    </div>
+
+    {% if incidencias is empty %}
+        <div class="p-5 text-center text-muted">
+            <i class="bi bi-shield-check fs-1 text-success mb-2 d-block"></i>
+            <h5 class="fw-bold text-dark">No se registran incidencias bajo este criterio</h5>
+            <p class="small mb-0">No existen tarjetas o suspensiones que coincidan con los filtros seleccionados.</p>
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-secondary small text-uppercase fw-semibold">
+                    <tr>
+                        <th class="ps-4" style="width: 110px;">Fecha</th>
+                        <th>Jugador</th>
+                        <th>Equipo</th>
+                        <th>Partido / Jornada</th>
+                        <th class="text-center" style="width: 130px;">Tarjeta</th>
+                        <th>Motivo y Descripción Arbitral</th>
+                        <th style="width: 220px;">Sanción / Suspensión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inc in incidencias %}
+                        <tr>
+                            <!-- Fecha de la Incidencia -->
+                            <td class="ps-4">
+                                <span class="fw-bold text-dark">{{ inc.fecha_incidencia|date('d/m/Y') }}</span>
+                            </td>
+
+                            <!-- Jugador -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if inc.jugador_foto %}
+                                        <img src="{{ inc.jugador_foto }}" alt="{{ inc.jugador_nombres }}" class="player-mini-photo" onerror="this.onerror=null;this.src='/uploads/jugadores/default.png';">
+                                    {% else %}
+                                        <div class="player-mini-photo bg-secondary text-white d-flex align-items-center justify-content-center fw-bold small">
+                                            {{ inc.jugador_nombres|slice(0, 1) }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <a href="/reportes/jugadores/{{ inc.id_jugador }}" class="fw-bold text-dark text-decoration-none">
+                                            {{ inc.jugador_nombres }} {{ inc.jugador_apellidos }}
+                                        </a>
+                                        <small class="text-muted d-block">ID: #{{ inc.id_jugador }}</small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Equipo -->
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if inc.equipo_foto %}
+                                        <img src="{{ inc.equipo_foto }}" alt="{{ inc.equipo_nombre }}" class="team-logo-sm rounded-circle" onerror="this.style.display='none'">
+                                    {% endif %}
+                                    <span class="fw-semibold text-dark">{{ inc.equipo_nombre }}</span>
+                                </div>
+                            </td>
+
+                            <!-- Partido / Jornada -->
+                            <td>
+                                <span class="badge bg-light text-dark border mb-1">
+                                    Jornada {{ inc.numero_jornada }}
+                                </span>
+                                <div class="small text-muted">
+                                    {{ inc.equipo_local_nombre }} vs {{ inc.equipo_visita_nombre }}
+                                </div>
+                            </td>
+
+                            <!-- Tipo de Tarjeta -->
+                            <td class="text-center">
+                                {% if inc.tipo_tarjeta == 'amarilla' %}
+                                    <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill shadow-sm">
+                                        <div class="card-tarjeta-amarilla me-1"></div> Amarilla
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger text-white px-3 py-1.5 rounded-pill shadow-sm">
+                                        <div class="card-tarjeta-roja me-1"></div> Roja
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Descripción de la falta -->
+                            <td>
+                                <p class="mb-0 text-secondary small" style="max-width: 300px;">
+                                    {{ inc.descripcion }}
+                                </p>
+                            </td>
+
+                            <!-- Suspensión -->
+                            <td>
+                                {% if inc.numero_jornada_suspension or inc.fecha_suspension %}
+                                    <div class="p-2 rounded-3 bg-danger-subtle text-danger border border-danger-subtle small">
+                                        <div class="fw-bold">
+                                            <i class="bi bi-slash-circle-fill me-1"></i> Suspensión Activa
+                                        </div>
+                                        {% if inc.numero_jornada_suspension %}
+                                            <div>Aplica para: <strong>Jornada {{ inc.numero_jornada_suspension }}</strong></div>
+                                        {% endif %}
+                                        {% if inc.fecha_suspension %}
+                                            <div class="text-muted" style="font-size: 0.75rem;">Fecha: {{ inc.fecha_suspension|date('d/m/Y') }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border px-2 py-1">
+                                        <i class="bi bi-dash-circle me-1"></i> Sin suspensión
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pie de Firmas Oficial para Impresión -->
+<div class="print-only-signature mt-5 pt-4">
+    <div class="row text-center mt-4">
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Presidente del Tribunal de Disciplina
+            </div>
+            <small>Comisión de Penas y Sanciones</small>
+        </div>
+        <div class="col-6">
+            <div style="border-top: 1px solid #000; padding-top: 5px;" class="fw-bold">
+                Secretario General de Actas
+            </div>
+            <small>Certificación y Registro Oficial</small>
+        </div>
+    </div>
+</div>
+{% endblock %}
