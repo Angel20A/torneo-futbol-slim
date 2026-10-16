@@ -53,7 +53,10 @@ $containerBuilder->addDefinitions([
 
     // Servicio de subida de archivos
     UploadService::class => function (): UploadService {
-        return new UploadService(dirname(__DIR__) . '/public');
+        $publicPath = $_ENV['PUBLIC_PATH']
+            ?? dirname(__DIR__) . '/public';
+
+        return new UploadService($publicPath);
     },
 
     // Repositorios
